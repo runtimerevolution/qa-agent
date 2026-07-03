@@ -100,3 +100,8 @@ Generates file: `knowledge_base/history.md`
 - Never delete a test case — change the state to `Blocked` if no longer applicable
 - Update `roadmap.md` whenever a step is completed
 - The `venv/` folder should not be shared or pushed to Git
+
+
+## Changelog
+
+- 2026-06-30 — Initial project setup
