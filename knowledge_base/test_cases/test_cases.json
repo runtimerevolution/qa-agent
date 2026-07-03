@@ -1,0 +1,56 @@
+{
+  "project": "QA Agent",
+  "last_updated": "2026-06-30",
+  "test_cases": [
+    {
+      "id": "TC-001",
+      "work_item_type": "Test Case",
+      "title": "Login with valid credentials",
+      "area_path": "Project/Login",
+      "assigned_to": "Diogo",
+      "state": "Active",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Open the login page",
+          "expected": "Login page is displayed"
+        },
+        {
+          "step": 2,
+          "action": "Enter valid email and password",
+          "expected": "Fields are filled correctly"
+        },
+        {
+          "step": 3,
+          "action": "Click 'Login'",
+          "expected": "User is redirected to the dashboard"
+        }
+      ]
+    },
+    {
+      "id": "TC-002",
+      "work_item_type": "Test Case",
+      "title": "Login with invalid credentials",
+      "area_path": "Project/Login",
+      "assigned_to": "Diogo",
+      "state": "Passed",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Open the login page",
+          "expected": "Login page is displayed"
+        },
+        {
+          "step": 2,
+          "action": "Enter invalid email and wrong password",
+          "expected": "Fields are filled"
+        },
+        {
+          "step": 3,
+          "action": "Click 'Login'",
+          "expected": "Error message is displayed"
+        }
+      ]
+    }
+  ]
+}

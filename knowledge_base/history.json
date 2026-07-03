@@ -1,0 +1,10 @@
+{
+  "events": [
+    {
+      "timestamp": "2026-06-30 11:30",
+      "type": "state_change",
+      "test_id": "TC-002",
+      "details": "Active → Passed"
+    }
+  ]
+}
