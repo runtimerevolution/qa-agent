@@ -227,5 +227,49 @@ def export_tests_history():
 
     click.echo(f"\n✅ Test cases history exported to knowledge_base/test_cases_history.md\n")
 
+# Command: ask a question to the AI agent
+@cli.command()
+@click.argument("question")
+def ask(question):
+    """Ask a question to the AI agent based on the Knowledge Base."""
+    import ollama
+
+    # Load knowledge base context
+    with open(TEST_CASES_PATH, "r") as f:
+        test_cases = json.load(f)
+
+    roadmap_path = os.path.join(BASE_DIR, "knowledge_base", "roadmap", "roadmap.md")
+    with open(roadmap_path, "r") as f:
+        roadmap = f.read()
+
+    guidelines_path = os.path.join(BASE_DIR, "knowledge_base", "guidelines", "guidelines.md")
+    with open(guidelines_path, "r") as f:
+        guidelines = f.read()
+
+    # Build context
+    context = f"""
+You are a QA assistant. Answer based only on the following project information:
+
+TEAM ROADMAP:
+{roadmap}
+
+QA GUIDELINES:
+{guidelines}
+
+TEST CASES:
+{json.dumps(test_cases, indent=2)}
+
+Answer the following question: {question}
+"""
+
+    click.echo("\n🤖 Thinking...\n")
+
+    response = ollama.chat(
+        model="llama3.2",
+        messages=[{"role": "user", "content": context}]
+    )
+
+    click.echo(f"{response['message']['content']}\n")
+
 if __name__ == "__main__":
     cli()
