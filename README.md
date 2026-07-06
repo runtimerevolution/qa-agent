@@ -100,3 +100,54 @@ Generates file: `knowledge_base/history.md`
 - Never delete a test case — change the state to `Blocked` if no longer applicable
 - Update `roadmap.md` whenever a step is completed
 - The `venv/` folder should not be shared or pushed to Git
+
+
+## Changelog
+
+- 2026-06-30 — Initial project setup
+
+## Requirements
+
+> Already listed above, but for AI integration add:
+- [Ollama](https://ollama.com) installed and running
+- Llama 3.2 model pulled locally
+
+## AI Integration Setup
+
+**1. Install Ollama:**
+```bash
+curl -fsSL https://ollama.com/install.sh | sh
+```
+
+**2. Start the Ollama server:**
+```bash
+ollama serve
+```
+
+**3. Pull the Llama 3.2 model:**
+```bash
+ollama pull llama3.2
+```
+
+**4. Install the Python Ollama library:**
+```bash
+pip install ollama
+```
+
+> Note: The `ollama serve` terminal must remain active while using the `ask` command.
+
+## AI Command
+
+### 🤖 Ask the AI agent a question
+```bash
+python agent/cli.py ask "Your question here"
+```
+
+The agent reads the entire Knowledge Base (test cases, roadmap, guidelines) before answering, ensuring responses are always contextualised to your project.
+
+**Examples:**
+```bash
+python agent/cli.py ask "What should I test next?"
+python agent/cli.py ask "What test cases do we have for the Login module?"
+python agent/cli.py ask "What are the team guidelines for automation?"
+```
