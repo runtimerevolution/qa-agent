@@ -100,3 +100,22 @@ Generates file: `knowledge_base/history.md`
 - Never delete a test case — change the state to `Blocked` if no longer applicable
 - Update `roadmap.md` whenever a step is completed
 - The `venv/` folder should not be shared or pushed to Git
+
+## Interactive Menu
+
+Instead of typing commands manually, you can use the interactive menu:
+
+```bash
+python agent/menu.py
+```
+
+Navigate with the arrow keys and press Enter to select an option. Available options:
+
+- 📋 **View Test Cases** — lists all test cases
+- ➕ **Create Test Case** — adds a new test case interactively
+- 🗺️  **View Roadmap** — shows the team roadmap
+- 📜 **View History** — shows the change history
+- 📤 **Export History** — exports change history to Markdown
+- 📤 **Export Test Cases History** — exports test cases history to Markdown
+- 🤖 **Ask AI** — asks a question to the AI agent
+- ❌ **Exit** — exits the menu

@@ -51,6 +51,21 @@
           "expected": "Error message is displayed"
         }
       ]
+    },
+    {
+      "id": "TC-005",
+      "work_item_type": "Test Case",
+      "title": "This is a test",
+      "area_path": "Test area",
+      "assigned_to": "Diogo",
+      "state": "Active",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Just a tes",
+          "expected": "this works"
+        }
+      ]
     }
   ]
 }

@@ -5,6 +5,12 @@
       "type": "state_change",
       "test_id": "TC-002",
       "details": "Active → Passed"
+    },
+    {
+      "timestamp": "2026-07-06 11:54",
+      "type": "test_created",
+      "test_id": "TC-005",
+      "details": "Test case 'This is a test' created"
     }
   ]
 }
