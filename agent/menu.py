@@ -40,12 +40,15 @@ def create_pull_request():
     else:
         template = "## Description\n\n## How to Test\n\n## Checklist\n"
 
-    print("\n📝 PR Description (edit the template and save when done):")
+    print("\n📝 PR Description (edit the template below):")
+    print("💡 Tip: Press Option + Enter (Mac) or Alt + Enter (Windows) when finished.")
     print("─" * 50)
+    input("Press Enter to open the description editor...")
     description = questionary.text(
         "Description:",
         default=template,
-        multiline=True
+        multiline=True,
+        instruction=""
     ).ask()
 
     if not description:
@@ -60,6 +63,30 @@ def create_pull_request():
 
     if confirm == "❌ Cancel":
         print("\n❌ PR creation cancelled.\n")
+        return
+
+    # Check current branch
+    current_branch = subprocess.run(
+        ["git", "branch", "--show-current"],
+        capture_output=True,
+        text=True
+    ).stdout.strip()
+
+    if current_branch == "main":
+        print("\n⚠️  You are on the 'main' branch. Please switch to a feature branch before creating a PR.")
+        print("💡 Tip: Run 'git checkout -b feature/your-feature-name' to create a new branch.\n")
+        return
+
+    # Check current branch
+    current_branch = subprocess.run(
+        ["git", "branch", "--show-current"],
+        capture_output=True,
+        text=True
+    ).stdout.strip()
+
+    if current_branch == "main":
+        print("\n⚠️  You are on the 'main' branch. Please switch to a feature branch before creating a PR.")
+        print("💡 Tip: Run 'git checkout -b feature/your-feature-name' to create a new branch.\n")
         return
 
     # git add, commit, push and create PR
