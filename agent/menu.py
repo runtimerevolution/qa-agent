@@ -94,7 +94,7 @@ def create_pull_request():
 
     subprocess.run(["git", "add", "."])
     subprocess.run(["git", "commit", "-m", title])
-    subprocess.run(["git", "push"])
+    subprocess.run(["git", "push", "--set-upstream", "origin", current_branch])
 
     if platform == "GitHub":
         result = subprocess.run(
