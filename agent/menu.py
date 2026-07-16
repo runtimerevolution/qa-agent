@@ -11,12 +11,116 @@ def wait_for_menu():
     """Waits for the user to press Enter before returning to the menu."""
     input("\nPress Enter to return to the menu...")
 
+def test_cases_menu():
+    """Submenu for Test Cases."""
+    while True:
+        print("\n📋 Test Cases\n")
+
+        choice = questionary.select(
+            "What would you like to do?",
+            choices=[
+                "👁️  View Test Cases",
+                "🔍 Search Test Cases",
+                "➕ Create Test Case",
+                "✏️  Update Test Case",
+                "👤 Assign Test Case",
+                "📊 Stats",
+                "📤 Export Test Cases History",
+                "⬅️  Back"
+            ]
+        ).ask()
+
+        if choice == "👁️  View Test Cases":
+            run_command(["list-tests"])
+            wait_for_menu()
+
+        elif choice == "🔍 Search Test Cases":
+            search_by = questionary.select(
+                "Search by:",
+                choices=[
+                    "🔤 Keyword (searches everything)",
+                    "👤 Assignee",
+                    "📁 Area",
+                    "🔵 State",
+                ]
+            ).ask()
+
+            if search_by == "🔤 Keyword (searches everything)":
+                value = questionary.text("Keyword:").ask()
+                run_command(["search", "--keyword", value])
+
+            elif search_by == "👤 Assignee":
+                value = questionary.text("Assignee name:").ask()
+                run_command(["search", "--assignee", value])
+
+            elif search_by == "📁 Area":
+                value = questionary.text("Area:").ask()
+                run_command(["search", "--area", value])
+
+            elif search_by == "🔵 State":
+                value = questionary.select(
+                    "Select state:",
+                    choices=["Active", "Passed", "Failed", "Blocked", "In Progress"]
+                ).ask()
+                run_command(["search", "--state", value])
+
+            wait_for_menu()
+
+        elif choice == "➕ Create Test Case":
+            run_command(["add-test"])
+            wait_for_menu()
+
+        elif choice == "✏️  Update Test Case":
+            test_id = questionary.text("Test Case ID (e.g. TC-001):").ask()
+            run_command(["update-test", test_id])
+            wait_for_menu()
+
+        elif choice == "👤 Assign Test Case":
+            test_id = questionary.text("Test Case ID (e.g. TC-001):").ask()
+            run_command(["assign", test_id])
+            wait_for_menu()
+
+        elif choice == "📊 Stats":
+            run_command(["stats"])
+            wait_for_menu()
+
+        elif choice == "📤 Export Test Cases History":
+            run_command(["export-tests-history"])
+            wait_for_menu()
+
+        elif choice == "⬅️  Back":
+            break
+
+def history_menu():
+    """Submenu for History."""
+    while True:
+        print("\n📜 History\n")
+
+        choice = questionary.select(
+            "What would you like to do?",
+            choices=[
+                "📜 View History",
+                "📤 Export History",
+                "⬅️  Back"
+            ]
+        ).ask()
+
+        if choice == "📜 View History":
+            run_command(["history"])
+            wait_for_menu()
+
+        elif choice == "📤 Export History":
+            run_command(["export-history"])
+            wait_for_menu()
+
+        elif choice == "⬅️  Back":
+            break
+
 def create_pull_request():
     """Interactive flow to create a Pull Request."""
 
     print("\n🔀 Create Pull Request\n")
 
-    # Select platform
     platform = questionary.select(
         "Select platform:",
         choices=["GitHub", "GitLab", "Cancel"]
@@ -26,13 +130,11 @@ def create_pull_request():
         print("\n❌ PR creation cancelled.\n")
         return
 
-    # PR Title
     title = questionary.text("PR Title:").ask()
     if not title:
         print("\n❌ PR creation cancelled.\n")
         return
 
-    # PR Description (pre-filled with template)
     template_path = ".github/pull_request_template.md"
     if os.path.exists(template_path):
         with open(template_path, "r") as f:
@@ -55,7 +157,6 @@ def create_pull_request():
         print("\n❌ PR creation cancelled.\n")
         return
 
-    # Confirmation
     confirm = questionary.select(
         "\nWhat would you like to do?",
         choices=["✅ Create Pull Request", "❌ Cancel"]
@@ -65,7 +166,6 @@ def create_pull_request():
         print("\n❌ PR creation cancelled.\n")
         return
 
-    # Check current branch
     current_branch = subprocess.run(
         ["git", "branch", "--show-current"],
         capture_output=True,
@@ -77,24 +177,11 @@ def create_pull_request():
         print("💡 Tip: Run 'git checkout -b feature/your-feature-name' to create a new branch.\n")
         return
 
-    # Check current branch
-    current_branch = subprocess.run(
-        ["git", "branch", "--show-current"],
-        capture_output=True,
-        text=True
-    ).stdout.strip()
-
-    if current_branch == "main":
-        print("\n⚠️  You are on the 'main' branch. Please switch to a feature branch before creating a PR.")
-        print("💡 Tip: Run 'git checkout -b feature/your-feature-name' to create a new branch.\n")
-        return
-
-    # git add, commit, push and create PR
     print("\n⏳ Preparing your Pull Request...\n")
 
     subprocess.run(["git", "add", "."])
     subprocess.run(["git", "commit", "-m", title])
-    subprocess.run(["git", "push"])
+    subprocess.run(["git", "push", "--set-upstream", "origin", current_branch])
 
     if platform == "GitHub":
         result = subprocess.run(
@@ -118,41 +205,24 @@ def main():
         choice = questionary.select(
             "What would you like to do?",
             choices=[
-                "📋 View Test Cases",
-                "➕ Create Test Case",
-                "🗺️  View Roadmap",
-                "📜 View History",
-                "📤 Export History",
-                "📤 Export Test Cases History",
+                "📋 Test Cases",
+                "🗺️  Roadmap",
+                "📜 History",
                 "🤖 Ask AI",
                 "🔀 Create Pull Request",
                 "❌ Exit"
             ]
         ).ask()
 
-        if choice == "📋 View Test Cases":
-            run_command(["list-tests"])
-            wait_for_menu()
+        if choice == "📋 Test Cases":
+            test_cases_menu()
 
-        elif choice == "➕ Create Test Case":
-            run_command(["add-test"])
-            wait_for_menu()
-
-        elif choice == "🗺️  View Roadmap":
+        elif choice == "🗺️  Roadmap":
             run_command(["roadmap"])
             wait_for_menu()
 
-        elif choice == "📜 View History":
-            run_command(["history"])
-            wait_for_menu()
-
-        elif choice == "📤 Export History":
-            run_command(["export-history"])
-            wait_for_menu()
-
-        elif choice == "📤 Export Test Cases History":
-            run_command(["export-tests-history"])
-            wait_for_menu()
+        elif choice == "📜 History":
+            history_menu()
 
         elif choice == "🤖 Ask AI":
             question = questionary.text("What would you like to ask?").ask()
