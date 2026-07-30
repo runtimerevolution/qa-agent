@@ -19,7 +19,7 @@ def create_pull_request():
     # Select platform
     platform = questionary.select(
         "Select platform:",
-        choices=["GitHub", "GitLab", "Cancel"]
+        choices=["GitHub", "GitLab", "Bitbucket", "Cancel"]
     ).ask()
 
     if platform == "Cancel":
@@ -110,6 +110,9 @@ def create_pull_request():
 
     elif platform == "GitLab":
         print("\n⚠️  GitLab integration coming soon.\n")
+
+    elif platform == "Bitbucket":
+        print("\n⚠️  Bitbucket integration coming soon.\n")
 
 def main():
     while True:
