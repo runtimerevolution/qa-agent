@@ -1,0 +1,8 @@
+{
+  "project": "QA Agent",
+  "platform": "GitHub",
+  "available_platforms": ["GitHub", "GitLab", "Bitbucket"],
+  "base_branch": "main",
+  "slack_channel": "",
+  "slack_token": ""
+}

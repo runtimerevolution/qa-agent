@@ -101,6 +101,10 @@ Generates file: `knowledge_base/history.md`
 - Update `roadmap.md` whenever a step is completed
 - The `venv/` folder should not be shared or pushed to Git
 
+
+## Changelog
+
+- 2026-06-30 — Initial project setup
 ## Interactive Menu
 
 Instead of typing commands manually, you can use the interactive menu:
