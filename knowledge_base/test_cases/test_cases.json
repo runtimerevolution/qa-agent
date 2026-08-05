@@ -9,6 +9,7 @@
       "area_path": "Login/logout",
       "assigned_to": "Tester",
       "state": "Active",
+      "playwright_file": "tests/test_login.py::test_login_valid_credentials",
       "steps": [
         {
           "step": 1,
@@ -33,7 +34,8 @@
       "title": "Login with invalid credentials",
       "area_path": "Project/Login",
       "assigned_to": "Diogo",
-      "state": "Passed",
+      "state": "Active",
+      "playwright_file": "tests/test_login.py::test_login_invalid_credentials",
       "steps": [
         {
           "step": 1,
@@ -49,21 +51,6 @@
           "step": 3,
           "action": "Click 'Login'",
           "expected": "Error message is displayed"
-        }
-      ]
-    },
-    {
-      "id": "TC-005",
-      "work_item_type": "Test Case",
-      "title": "This is a test",
-      "area_path": "Test area",
-      "assigned_to": "Diogo",
-      "state": "Active",
-      "steps": [
-        {
-          "step": 1,
-          "action": "Just a tes",
-          "expected": "this works"
         }
       ]
     }
