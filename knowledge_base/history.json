@@ -25,14 +25,28 @@
       "details": "Assigned from 'Diogo' to 'Tester'"
     },
     {
-      "timestamp": "2026-07-15 14:12",
-      "type": "test_updated",
-      "test_id": "TC-002",
-      "details": "Test case 'TC-002' updated",
       "timestamp": "2026-07-31 14:50",
       "type": "test_created",
       "test_id": "sd",
       "details": "Test case 'sd' created"
+    },
+    {
+      "timestamp": "2026-08-05 10:23",
+      "type": "test_run",
+      "test_id": "TC-001",
+      "details": "Playwright test ran — result: Failed"
+    },
+    {
+      "timestamp": "2026-08-05 10:35",
+      "type": "test_run",
+      "test_id": "TC-001",
+      "details": "Playwright test ran — result: Passed"
+    },
+    {
+      "timestamp": "2026-08-05 10:38",
+      "type": "test_run",
+      "test_id": "TC-001",
+      "details": "Playwright test ran — result: Passed"
     }
   ]
 }

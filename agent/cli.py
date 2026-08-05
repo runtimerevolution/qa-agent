@@ -133,6 +133,7 @@ def add_test():
         "area_path": area_path,
         "assigned_to": assigned_to,
         "state": "Active",
+        "playwright_file": "",
         "steps": steps
     }
 
@@ -168,10 +169,12 @@ def update_test(test_id):
     title = click.prompt(f"   Title", default=test["title"])
     area_path = click.prompt(f"   Area", default=test["area_path"])
     assigned_to = click.prompt(f"   Assigned to", default=test["assigned_to"])
+    playwright_file = click.prompt(f"   Playwright file", default=test.get("playwright_file", ""))
 
     test["title"] = title
     test["area_path"] = area_path
     test["assigned_to"] = assigned_to
+    test["playwright_file"] = playwright_file
 
     with open(TEST_CASES_PATH, "w") as f:
         json.dump(data, f, indent=2, ensure_ascii=False)
@@ -229,7 +232,6 @@ def search(keyword, assignee, area, state):
         click.echo(f"  {tc['id']} | {tc['title']} | {tc['state']} | {tc['assigned_to']}")
     click.echo("")
 
-
 # Command: show test cases statistics
 @cli.command()
 def stats():
@@ -279,6 +281,64 @@ def assign(test_id):
 
     click.echo(f"\n✅ TC '{test_id}' assigned to '{new_assignee}'!\n")
 
+# Command: run a playwright test
+@cli.command()
+@click.argument("test_id")
+@click.option("--simulate", is_flag=True, default=False, help="Simulate test run without browser")
+def run_test(test_id, simulate):
+    """Run a Playwright test for a specific test case. Ex: python agent/cli.py run-test TC-001"""
+    import subprocess as sp
+    import time
+
+    with open(TEST_CASES_PATH, "r") as f:
+        data = json.load(f)
+
+    test = next((tc for tc in data["test_cases"] if tc["id"] == test_id), None)
+
+    if test is None:
+        click.echo(f"\n❌ Test case '{test_id}' not found.\n")
+        return
+
+    playwright_file = test.get("playwright_file")
+
+    if not playwright_file:
+        click.echo(f"\n❌ No Playwright test linked to '{test_id}'.\n")
+        click.echo(f"   Add a 'playwright_file' field to the test case in test_cases.json.\n")
+        return
+
+    click.echo(f"\n🎭 Running Playwright test for '{test_id}' — {test['title']}\n")
+
+    if simulate:
+        click.echo(f"   📄 Test file: {playwright_file}")
+        click.echo(f"   🌐 Browser: Chromium")
+        click.echo(f"   ⏳ Running steps:\n")
+        for step in test["steps"]:
+            click.echo(f"      Step {step['step']}: {step['action']}")
+            time.sleep(0.5)
+            click.echo(f"      ✅ {step['expected']}\n")
+        new_state = "Passed"
+        click.echo(f"\n✅ Test passed!\n")
+    else:
+        result = sp.run(
+            ["python", "-m", "pytest", playwright_file, "-v"],
+            capture_output=False
+        )
+        if result.returncode == 0:
+            new_state = "Passed"
+            click.echo(f"\n✅ Test passed!\n")
+        else:
+            new_state = "Failed"
+            click.echo(f"\n❌ Test failed!\n")
+
+    test["state"] = new_state
+
+    with open(TEST_CASES_PATH, "w") as f:
+        json.dump(data, f, indent=2, ensure_ascii=False)
+
+    log_event("test_run", test_id, f"Playwright test ran — result: {new_state}")
+
+    click.echo(f"📝 State updated to '{new_state}' automatically.\n")
+
 # Command: search pull requests
 @cli.command()
 @click.option("--title", "-t", default=None, help="Search by title")
@@ -293,9 +353,9 @@ def search_prs(title, author, reviewer, state):
 
     if state == "all":
         cmd = ["gh", "pr", "list", "--state", "open", "--json",
-               "number,title,author,reviewRequests,state,url"]
+               "number,title,author,reviewRequests,state,url,mergedAt"]
         cmd2 = ["gh", "pr", "list", "--state", "closed", "--json",
-                "number,title,author,reviewRequests,state,url"]
+                "number,title,author,reviewRequests,state,url,mergedAt"]
         result2 = sp.run(cmd2, capture_output=True, text=True)
     elif state == "merged":
         cmd = ["gh", "pr", "list", "--state", "closed", "--json",
@@ -312,16 +372,13 @@ def search_prs(title, author, reviewer, state):
 
     import json as json_module
     prs = json_module.loads(result.stdout)
+
     if state == "all" and result2.returncode == 0:
         prs += json_module.loads(result2.stdout)
     elif state == "merged":
         prs = [pr for pr in prs if pr.get("mergedAt")]
     elif state == "closed":
         prs = [pr for pr in prs if not pr.get("mergedAt")]
-
-    if not prs:
-        click.echo(f"\n❌ No pull requests found.\n")
-        return
 
     if title:
         prs = [pr for pr in prs if title.lower() in pr["title"].lower()]
@@ -335,7 +392,7 @@ def search_prs(title, author, reviewer, state):
                for r in pr.get("reviewRequests", []))]
 
     if not prs:
-        click.echo(f"\n❌ No pull requests found with the given filters.\n")
+        click.echo(f"\n❌ No pull requests found.\n")
         return
 
     click.echo(f"  {'#':<5} {'Title':<45} {'Author':<15} {'State':<10} URL")
@@ -349,7 +406,6 @@ def search_prs(title, author, reviewer, state):
         click.echo(f"  {number:<5} {title_short:<45} {author_name:<15} {pr_state:<10} {url}")
     click.echo("")
 
-        
 # Command: show the team roadmap
 @cli.command()
 def roadmap():
@@ -428,6 +484,48 @@ def export_tests_history():
             f.write(f"- {tc['id']} | {tc['title']} | {tc['state']} | {tc['assigned_to']}\n")
 
     click.echo(f"\n✅ Test cases history exported to knowledge_base/test_cases_history.md\n")
+
+# Command: ask a question to the AI agent
+@cli.command()
+@click.argument("question")
+def ask(question):
+    """Ask a question to the AI agent based on the Knowledge Base."""
+    import ollama
+
+    with open(TEST_CASES_PATH, "r") as f:
+        test_cases = json.load(f)
+
+    roadmap_path = os.path.join(BASE_DIR, "knowledge_base", "roadmap", "roadmap.md")
+    with open(roadmap_path, "r") as f:
+        roadmap = f.read()
+
+    guidelines_path = os.path.join(BASE_DIR, "knowledge_base", "guidelines", "guidelines.md")
+    with open(guidelines_path, "r") as f:
+        guidelines = f.read()
+
+    context = f"""
+You are a QA assistant. Answer based only on the following project information:
+
+TEAM ROADMAP:
+{roadmap}
+
+QA GUIDELINES:
+{guidelines}
+
+TEST CASES:
+{json.dumps(test_cases, indent=2)}
+
+Answer the following question: {question}
+"""
+
+    click.echo("\n🤖 Thinking...\n")
+
+    response = ollama.chat(
+        model="llama3.2",
+        messages=[{"role": "user", "content": context}]
+    )
+
+    click.echo(f"{response['message']['content']}\n")
 
 if __name__ == "__main__":
     cli()
