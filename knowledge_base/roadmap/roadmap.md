@@ -17,6 +17,8 @@ The team is in the learning phase of test automation.
 - Integrate the agent with test reports
 - AI integration for importing external documents
 
+### ✅ Completed
+
 ## Notes
 - Update this file whenever a step is completed
 - Responsible for updates: Diogo
