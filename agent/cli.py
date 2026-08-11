@@ -492,6 +492,7 @@ def ask(question):
     """Ask a question to the AI agent based on the Knowledge Base."""
     import ollama
 
+    # Load knowledge base context
     with open(TEST_CASES_PATH, "r") as f:
         test_cases = json.load(f)
 
@@ -503,6 +504,7 @@ def ask(question):
     with open(guidelines_path, "r") as f:
         guidelines = f.read()
 
+    # Build context
     context = f"""
 You are a QA assistant. Answer based only on the following project information:
 
