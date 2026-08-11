@@ -198,6 +198,89 @@ def create_pull_request():
     elif platform == "GitLab":
         print("\n⚠️  GitLab integration coming soon.\n")
 
+def pull_requests_menu():
+    """Submenu for Pull Requests."""
+    while True:
+        print("\n🔀 Pull Requests\n")
+
+        choice = questionary.select(
+            "What would you like to do?",
+            choices=[
+                "📋 View All PRs",
+                "🔍 Search PRs",
+                "➕ Create Pull Request",
+                "⬅️  Back"
+            ]
+        ).ask()
+
+        if choice == "📋 View All PRs":
+            state = questionary.select(
+                "Show PRs with state:",
+                choices=["🟢 Open", "🔴 Closed", "🟣 Merged", "📋 All"]
+            ).ask()
+
+            state_map = {
+                "🟢 Open": "open",
+                "🔴 Closed": "closed",
+                "🟣 Merged": "merged",
+                "📋 All": "all"
+            }
+
+            run_command(["search-prs", "--state", state_map[state]])
+            wait_for_menu()
+
+        elif choice == "🔍 Search PRs":
+            search_by = questionary.select(
+                "Search by:",
+                choices=[
+                    "🔤 Title",
+                    "👤 Author",
+                    "👥 Reviewer",
+                    "🔵 State",
+                    "⬅️  Back"
+                ]
+            ).ask()
+
+            if search_by == "⬅️  Back":
+                continue
+
+            if search_by == "🔤 Title":
+                value = questionary.text("Title (min. 3 characters):").ask()
+                run_command(["search-prs", "--title", value])
+
+            elif search_by == "👤 Author":
+                value = questionary.text("Author username:").ask()
+                run_command(["search-prs", "--author", value])
+
+            elif search_by == "👥 Reviewer":
+                value = questionary.text("Reviewer username:").ask()
+                run_command(["search-prs", "--reviewer", value])
+
+            elif search_by == "🔵 State":
+                value = questionary.select(
+                    "Select state:",
+                    choices=["🟢 Open", "🔴 Closed", "🟣 Merged", "📋 All"]
+                ).ask()
+
+                state_map = {
+                    "🟢 Open": "open",
+                    "🔴 Closed": "closed",
+                    "🟣 Merged": "merged",
+                    "📋 All": "all"
+                }
+
+                run_command(["search-prs", "--state", state_map[value]])
+
+            wait_for_menu()
+
+        elif choice == "➕ Create Pull Request":
+            create_pull_request()
+            wait_for_menu()
+
+        elif choice == "⬅️  Back":
+            break
+
+
 def main():
     while True:
         print("\n🤖 QA Agent\n")
@@ -209,7 +292,7 @@ def main():
                 "🗺️  Roadmap",
                 "📜 History",
                 "🤖 Ask AI",
-                "🔀 Create Pull Request",
+                "🔀 Pull Requests",
                 "❌ Exit"
             ]
         ).ask()
@@ -229,9 +312,8 @@ def main():
             run_command(["ask", question])
             wait_for_menu()
 
-        elif choice == "🔀 Create Pull Request":
-            create_pull_request()
-            wait_for_menu()
+        elif choice == "🔀 Pull Requests":
+            pull_requests_menu()
 
         elif choice == "❌ Exit":
             print("\n👋 Goodbye!\n")

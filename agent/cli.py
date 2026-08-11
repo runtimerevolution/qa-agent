@@ -278,7 +278,77 @@ def assign(test_id):
     log_event("test_assigned", test_id, f"Assigned from '{old_assignee}' to '{new_assignee}'")
 
     click.echo(f"\n✅ TC '{test_id}' assigned to '{new_assignee}'!\n")
-    
+
+# Command: search pull requests
+@cli.command()
+@click.option("--title", "-t", default=None, help="Search by title")
+@click.option("--author", "-a", default=None, help="Search by author")
+@click.option("--reviewer", "-r", default=None, help="Search by reviewer")
+@click.option("--state", "-s", default="open", help="Search by state (open, closed, merged, all)")
+def search_prs(title, author, reviewer, state):
+    """Search pull requests on GitHub."""
+    import subprocess as sp
+
+    click.echo(f"\n🔍 Searching Pull Requests...\n")
+
+    if state == "all":
+        cmd = ["gh", "pr", "list", "--state", "open", "--json",
+               "number,title,author,reviewRequests,state,url"]
+        cmd2 = ["gh", "pr", "list", "--state", "closed", "--json",
+                "number,title,author,reviewRequests,state,url"]
+        result2 = sp.run(cmd2, capture_output=True, text=True)
+    elif state == "merged":
+        cmd = ["gh", "pr", "list", "--state", "closed", "--json",
+               "number,title,author,reviewRequests,state,url,mergedAt"]
+    else:
+        cmd = ["gh", "pr", "list", "--state", state, "--json",
+               "number,title,author,reviewRequests,state,url,mergedAt"]
+
+    result = sp.run(cmd, capture_output=True, text=True)
+
+    if result.returncode != 0:
+        click.echo(f"\n❌ Error connecting to GitHub: {result.stderr}\n")
+        return
+
+    import json as json_module
+    prs = json_module.loads(result.stdout)
+    if state == "all" and result2.returncode == 0:
+        prs += json_module.loads(result2.stdout)
+    elif state == "merged":
+        prs = [pr for pr in prs if pr.get("mergedAt")]
+    elif state == "closed":
+        prs = [pr for pr in prs if not pr.get("mergedAt")]
+
+    if not prs:
+        click.echo(f"\n❌ No pull requests found.\n")
+        return
+
+    if title:
+        prs = [pr for pr in prs if title.lower() in pr["title"].lower()]
+
+    if author:
+        prs = [pr for pr in prs if author.lower() in pr["author"]["login"].lower()]
+
+    if reviewer:
+        prs = [pr for pr in prs
+               if any(reviewer.lower() in r["login"].lower()
+               for r in pr.get("reviewRequests", []))]
+
+    if not prs:
+        click.echo(f"\n❌ No pull requests found with the given filters.\n")
+        return
+
+    click.echo(f"  {'#':<5} {'Title':<45} {'Author':<15} {'State':<10} URL")
+    click.echo(f"  {'─'*5} {'─'*45} {'─'*15} {'─'*10} {'─'*40}")
+    for pr in prs:
+        number = f"#{pr['number']}"
+        title_short = pr["title"][:43] + ".." if len(pr["title"]) > 43 else pr["title"]
+        author_name = pr["author"]["login"][:13]
+        pr_state = pr["state"]
+        url = pr["url"]
+        click.echo(f"  {number:<5} {title_short:<45} {author_name:<15} {pr_state:<10} {url}")
+    click.echo("")
+
         
 # Command: show the team roadmap
 @cli.command()
