@@ -24,6 +24,7 @@ def test_cases_menu():
                 "➕ Create Test Case",
                 "✏️  Update Test Case",
                 "👤 Assign Test Case",
+                "🎭 Run Playwright Test",
                 "📊 Stats",
                 "📤 Export Test Cases History",
                 "⬅️  Back"
@@ -78,6 +79,22 @@ def test_cases_menu():
         elif choice == "👤 Assign Test Case":
             test_id = questionary.text("Test Case ID (e.g. TC-001):").ask()
             run_command(["assign", test_id])
+            wait_for_menu()
+
+        elif choice == "🎭 Run Playwright Test":
+            test_id = questionary.text("Test Case ID (e.g. TC-001):").ask()
+            mode = questionary.select(
+                "Run mode:",
+                choices=[
+                    "🌐 Real (requires Playwright installed)",
+                    "🎭 Simulate (demo mode)"
+                ]
+            ).ask()
+
+            if mode == "🎭 Simulate (demo mode)":
+                run_command(["run-test", test_id, "--simulate"])
+            else:
+                run_command(["run-test", test_id])
             wait_for_menu()
 
         elif choice == "📊 Stats":
