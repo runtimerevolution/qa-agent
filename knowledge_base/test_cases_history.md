@@ -1,8 +1,8 @@
-# Histórico de Test Cases Criados
+# Test Cases History
 
-Projeto: QA Agent
-Última atualização: 2026-06-26
+Project: QA Agent
+Last updated: 2026-06-30
 
-- TC-001 | Login com credenciais válidas | Passed | Diogo
-- TC-002 | Login com credenciais inválidas | Passed | Diogo
-- TC-003 Verificar funcionalidades | Verificar funcionalidades | Active | Diogo
+- TC-001 | new title | Active | Tester
+- TC-002 | Login with invalid credentials | Passed | Diogo
+- TC-005 | This is a test | Active | Diogo

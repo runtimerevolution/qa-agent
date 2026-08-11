@@ -11,6 +11,24 @@
       "type": "test_created",
       "test_id": "TC-005",
       "details": "Test case 'This is a test' created"
+    },
+    {
+      "timestamp": "2026-07-15 12:17",
+      "type": "test_updated",
+      "test_id": "TC-001",
+      "details": "Test case 'TC-001' updated"
+    },
+    {
+      "timestamp": "2026-07-15 14:11",
+      "type": "test_assigned",
+      "test_id": "TC-001",
+      "details": "Assigned from 'Diogo' to 'Tester'"
+    },
+    {
+      "timestamp": "2026-07-15 14:12",
+      "type": "test_updated",
+      "test_id": "TC-002",
+      "details": "Test case 'TC-002' updated"
     }
   ]
 }
