@@ -53,6 +53,32 @@
           "expected": "Error message is displayed"
         }
       ]
+    },
+    {
+      "id": "TC-003",
+      "work_item_type": "Test Case",
+      "title": "Log in Test Case",
+      "area_path": "login",
+      "assigned_to": "Diogo",
+      "state": "Active",
+      "playwright_file": "",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Open the login page of the application in a web browser.",
+          "expected": "The login page should be displayed with the expected fields (username and password)"
+        },
+        {
+          "step": 2,
+          "action": "Enter valid credentials ('username' and 'password') into the respective fields on the login page.",
+          "expected": "A 'Login Successful' message should be displayed after clicking the submit button."
+        },
+        {
+          "step": 3,
+          "action": "Enter invalid credentials ('wrong username' and 'wrong password') into the respective fields on the login page.",
+          "expected": "An error message ('Invalid credentials') should be displayed next to the submit button."
+        }
+      ]
     }
   ]
 }

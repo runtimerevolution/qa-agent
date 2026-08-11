@@ -22,6 +22,7 @@ def test_cases_menu():
                 "👁️  View Test Cases",
                 "🔍 Search Test Cases",
                 "➕ Create Test Case",
+                "🤖 Generate Test Case with AI",
                 "✏️  Update Test Case",
                 "👤 Assign Test Case",
                 "🎭 Run Playwright Test",
@@ -69,6 +70,10 @@ def test_cases_menu():
 
         elif choice == "➕ Create Test Case":
             run_command(["add-test"])
+            wait_for_menu()
+        
+        elif "Generate Test Case with AI" in choice:
+            run_command(["generate-test"])
             wait_for_menu()
 
         elif choice == "✏️  Update Test Case":
