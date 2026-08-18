@@ -26,6 +26,7 @@ def test_cases_menu():
                 "✏️  Update Test Case",
                 "👤 Assign Test Case",
                 "🎭 Run Playwright Test",
+                "🗑️  Delete Test Case",
                 "📊 Stats",
                 "📤 Export Test Cases History",
                 "⬅️  Back"
@@ -100,6 +101,11 @@ def test_cases_menu():
                 run_command(["run-test", test_id, "--simulate"])
             else:
                 run_command(["run-test", test_id])
+            wait_for_menu()
+            
+        elif choice == "🗑️  Delete Test Case":
+            test_id = questionary.text("Test Case ID (e.g. TC-001):").ask()
+            run_command(["delete-test", test_id])
             wait_for_menu()
 
         elif choice == "📊 Stats":
@@ -301,7 +307,79 @@ def pull_requests_menu():
 
         elif choice == "⬅️  Back":
             break
+def roadmap_menu():
+    """Submenu for Roadmap management."""
+    while True:
+        print("\n🗺️  Roadmap\n")
 
+        choice = questionary.select(
+            "What would you like to do?",
+            choices=[
+                "👁️  View Roadmap",
+                "➕ Add Item",
+                "🔄 Move Item",
+                "✅ Mark as Completed",
+                "🗑️  Remove Item",
+                "⬅️  Back"
+            ]
+        ).ask()
+
+        if choice == "👁️  View Roadmap":
+            run_command(["roadmap"])
+            wait_for_menu()
+
+        elif choice == "➕ Add Item":
+            section = questionary.select(
+                "Select section:",
+                choices=[
+                    "🟢 In Progress",
+                    "🟡 To Do",
+                    "🔴 Backlog"
+                ]
+            ).ask()
+
+            section_map = {
+                "🟢 In Progress": "inprogress",
+                "🟡 To Do": "todo",
+                "🔴 Backlog": "backlog"
+            }
+
+            item = questionary.text("Item description:").ask()
+            run_command(["roadmap-add", section_map[section], item])
+            wait_for_menu()
+
+        elif choice == "🔄 Move Item":
+            item = questionary.text("Item to move (exact text):").ask()
+            section = questionary.select(
+                "Move to section:",
+                choices=[
+                    "🟢 In Progress",
+                    "🟡 To Do",
+                    "🔴 Backlog"
+                ]
+            ).ask()
+
+            section_map = {
+                "🟢 In Progress": "inprogress",
+                "🟡 To Do": "todo",
+                "🔴 Backlog": "backlog"
+            }
+
+            run_command(["roadmap-move", item, section_map[section]])
+            wait_for_menu()
+
+        elif choice == "✅ Mark as Completed":
+            item = questionary.text("Item to mark as completed (exact text):").ask()
+            run_command(["roadmap-complete", item])
+            wait_for_menu()
+
+        elif "Remove Item" in choice:
+            item = questionary.text("Item to remove (exact text):").ask()
+            run_command(["roadmap-remove", item])
+            wait_for_menu()
+
+        elif choice == "⬅️  Back":
+            break
 
 def main():
     while True:
@@ -323,8 +401,7 @@ def main():
             test_cases_menu()
 
         elif choice == "🗺️  Roadmap":
-            run_command(["roadmap"])
-            wait_for_menu()
+            roadmap_menu()
 
         elif choice == "📜 History":
             history_menu()

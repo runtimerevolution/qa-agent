@@ -3,32 +3,6 @@
   "last_updated": "2026-06-30",
   "test_cases": [
     {
-      "id": "TC-001",
-      "work_item_type": "Test Case",
-      "title": "new title",
-      "area_path": "Login/logout",
-      "assigned_to": "Tester",
-      "state": "Passed",
-      "playwright_file": "tests/test_login.py::test_login_valid_credentials",
-      "steps": [
-        {
-          "step": 1,
-          "action": "Open the login page",
-          "expected": "Login page is displayed"
-        },
-        {
-          "step": 2,
-          "action": "Enter valid email and password",
-          "expected": "Fields are filled correctly"
-        },
-        {
-          "step": 3,
-          "action": "Click 'Login'",
-          "expected": "User is redirected to the dashboard"
-        }
-      ]
-    },
-    {
       "id": "TC-002",
       "work_item_type": "Test Case",
       "title": "Login with invalid credentials",
@@ -51,6 +25,22 @@
           "step": 3,
           "action": "Click 'Login'",
           "expected": "Error message is displayed"
+        }
+      ]
+    },
+    {
+      "id": "TC-001 log in",
+      "work_item_type": "Test Case",
+      "title": "log in",
+      "area_path": "Log in",
+      "assigned_to": "Diogo",
+      "state": "Active",
+      "playwright_file": "",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Log in to account",
+          "expected": "it loggins"
         }
       ]
     },

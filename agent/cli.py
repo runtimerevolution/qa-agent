@@ -281,6 +281,39 @@ def assign(test_id):
 
     click.echo(f"\n✅ TC '{test_id}' assigned to '{new_assignee}'!\n")
 
+# Command: delete a test case
+@cli.command()
+@click.argument("test_id")
+def delete_test(test_id):
+    """Delete a test case from the database. Ex: python agent/cli.py delete-test TC-001"""
+    with open(TEST_CASES_PATH, "r") as f:
+        data = json.load(f)
+
+    test = next((tc for tc in data["test_cases"] if tc["id"] == test_id), None)
+
+    if test is None:
+        click.echo(f"\n❌ Test case '{test_id}' not found.\n")
+        return
+
+    click.echo(f"\n🗑️  You are about to delete the following test case:")
+    click.echo(f"   {test['id']} | {test['title']} | {test['state']} | {test['assigned_to']}\n")
+
+    confirm = click.confirm("   Are you sure you want to delete this test case?", default=False)
+
+    if not confirm:
+        click.echo(f"\n❌ Deletion cancelled.\n")
+        return
+
+    data["test_cases"] = [tc for tc in data["test_cases"] if tc["id"] != test_id]
+
+    with open(TEST_CASES_PATH, "w") as f:
+        json.dump(data, f, indent=2, ensure_ascii=False)
+
+    log_event("test_deleted", test_id, f"Test case '{test['title']}' deleted")
+
+    click.echo(f"\n✅ Test case '{test_id}' successfully deleted!\n")
+
+
 # Command: run a playwright test
 @cli.command()
 @click.argument("test_id")
@@ -417,6 +450,118 @@ def roadmap():
 
     click.echo("\n🗺️  Team roadmap:\n")
     click.echo(content)
+
+# Command: add item to roadmap
+@cli.command()
+@click.argument("section")
+@click.argument("item")
+def roadmap_add(section, item):
+    """Add an item to the roadmap. Sections: inprogress, todo, backlog"""
+    roadmap_path = os.path.join(BASE_DIR, "knowledge_base", "roadmap", "roadmap.md")
+
+    section_map = {
+        "inprogress": "### 🟢 In Progress",
+        "todo": "### 🟡 To Do",
+        "backlog": "### 🔴 Backlog"
+    }
+
+    if section not in section_map:
+        click.echo(f"\n❌ Invalid section. Use: inprogress, todo, backlog\n")
+        return
+
+    with open(roadmap_path, "r") as f:
+        content = f.read()
+
+    section_header = section_map[section]
+    content = content.replace(section_header, f"{section_header}\n- {item}")
+
+    with open(roadmap_path, "w") as f:
+        f.write(content)
+
+    click.echo(f"\n✅ Item added to '{section}': {item}\n")
+
+# Command: move item in roadmap
+@cli.command()
+@click.argument("item")
+@click.argument("to_section")
+def roadmap_move(item, to_section):
+    """Move an item to another section. Sections: inprogress, todo, backlog"""
+    roadmap_path = os.path.join(BASE_DIR, "knowledge_base", "roadmap", "roadmap.md")
+
+    section_map = {
+        "inprogress": "### 🟢 In Progress",
+        "todo": "### 🟡 To Do",
+        "backlog": "### 🔴 Backlog"
+    }
+
+    if to_section not in section_map:
+        click.echo(f"\n❌ Invalid section. Use: inprogress, todo, backlog\n")
+        return
+
+    with open(roadmap_path, "r") as f:
+        content = f.read()
+
+    if f"- {item}" not in content:
+        click.echo(f"\n❌ Item '{item}' not found in roadmap.\n")
+        return
+
+    content = content.replace(f"- {item}\n", "")
+    section_header = section_map[to_section]
+    content = content.replace(section_header, f"{section_header}\n- {item}")
+
+    with open(roadmap_path, "w") as f:
+        f.write(content)
+
+    click.echo(f"\n✅ Item moved to '{to_section}': {item}\n")
+
+# Command: mark roadmap item as completed
+@cli.command()
+@click.argument("item")
+def roadmap_complete(item):
+    """Mark a roadmap item as completed."""
+    roadmap_path = os.path.join(BASE_DIR, "knowledge_base", "roadmap", "roadmap.md")
+
+    with open(roadmap_path, "r") as f:
+        content = f.read()
+
+    if f"- {item}" not in content:
+        click.echo(f"\n❌ Item '{item}' not found in roadmap.\n")
+        return
+
+    content = content.replace(f"- {item}\n", "")
+    content = content.replace("### ✅ Completed", f"### ✅ Completed\n- {item}")
+
+    with open(roadmap_path, "w") as f:
+        f.write(content)
+
+    click.echo(f"\n✅ Item marked as completed: {item}\n")
+
+# Command: remove roadmap item
+@cli.command()
+@click.argument("item")
+def roadmap_remove(item):
+    """Remove an item from the roadmap."""
+    roadmap_path = os.path.join(BASE_DIR, "knowledge_base", "roadmap", "roadmap.md")
+
+    with open(roadmap_path, "r") as f:
+        content = f.read()
+
+    if f"- {item}" not in content:
+        click.echo(f"\n❌ Item '{item}' not found in roadmap.\n")
+        return
+
+    confirm = click.confirm(f"   Are you sure you want to remove '{item}'?", default=False)
+
+    if not confirm:
+        click.echo(f"\n❌ Removal cancelled.\n")
+        return
+
+    content = content.replace(f"- {item}\n", "")
+
+    with open(roadmap_path, "w") as f:
+        f.write(content)
+
+    click.echo(f"\n✅ Item removed from roadmap: {item}\n")
 
 # Command: show the project history
 @cli.command()
