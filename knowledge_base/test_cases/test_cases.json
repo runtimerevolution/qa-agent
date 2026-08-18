@@ -1,30 +1,56 @@
 {
-  "project": "QA Agent",
-  "last_updated": "2026-06-30",
+  "project": "Team Allocator",
+  "last_updated": "2026-08-12",
   "test_cases": [
     {
-      "id": "TC-002",
+      "id": "TC-001",
       "work_item_type": "Test Case",
-      "title": "Login with invalid credentials",
-      "area_path": "Project/Login",
-      "assigned_to": "Diogo",
-      "state": "Active",
-      "playwright_file": "tests/test_login.py::test_login_invalid_credentials",
+      "title": "Valid login redirects Admin to bookings page",
+      "area_path": "Team Allocator/Login",
+      "assigned_to": "Diogo Claro",
+      "state": "Passed",
+      "playwright_file": "tests/test_login.py::test_valid_login",
       "steps": [
         {
           "step": 1,
-          "action": "Open the login page",
+          "action": "Navigate to the Team Allocator login page",
+          "expected": "Login page is displayed with email and password fields"
+        },
+        {
+          "step": 2,
+          "action": "Enter valid Admin credentials and click Login",
+          "expected": "Credentials are accepted"
+        },
+        {
+          "step": 3,
+          "action": "Observe the page after login",
+          "expected": "Admin is redirected to the bookings page"
+        }
+      ]
+    },
+    {
+      "id": "TC-002",
+      "work_item_type": "Test Case",
+      "title": "Invalid login shows error message",
+      "area_path": "Team Allocator/Login",
+      "assigned_to": "Diogo Claro",
+      "state": "Passed",
+      "playwright_file": "tests/test_login.py::test_invalid_login",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Navigate to the Team Allocator login page",
           "expected": "Login page is displayed"
         },
         {
           "step": 2,
-          "action": "Enter invalid email and wrong password",
-          "expected": "Fields are filled"
+          "action": "Enter invalid credentials and click Login",
+          "expected": "Credentials are submitted"
         },
         {
           "step": 3,
-          "action": "Click 'Login'",
-          "expected": "Error message is displayed"
+          "action": "Observe the result",
+          "expected": "An error message is displayed and the user remains on the login page"
         }
       ]
     },
@@ -47,26 +73,78 @@
     {
       "id": "TC-003",
       "work_item_type": "Test Case",
-      "title": "Log in Test Case",
-      "area_path": "login",
-      "assigned_to": "Diogo",
+      "title": "Viewer cannot create or edit bookings",
+      "area_path": "Team Allocator/Auth & Roles",
+      "assigned_to": "Diogo Claro",
       "state": "Active",
-      "playwright_file": "",
+      "playwright_file": "tests/test_roles.py::test_viewer_cannot_edit",
       "steps": [
         {
           "step": 1,
-          "action": "Open the login page of the application in a web browser.",
-          "expected": "The login page should be displayed with the expected fields (username and password)"
+          "action": "Log in as a Viewer user",
+          "expected": "Viewer is logged in and sees the calendar"
         },
         {
           "step": 2,
-          "action": "Enter valid credentials ('username' and 'password') into the respective fields on the login page.",
-          "expected": "A 'Login Successful' message should be displayed after clicking the submit button."
+          "action": "Attempt to click on a booking to edit it",
+          "expected": "No edit or delete actions are available in the booking popup"
         },
         {
           "step": 3,
-          "action": "Enter invalid credentials ('wrong username' and 'wrong password') into the respective fields on the login page.",
-          "expected": "An error message ('Invalid credentials') should be displayed next to the submit button."
+          "action": "Attempt to create a new booking by clicking on the calendar",
+          "expected": "No booking creation form is shown — action is blocked"
+        }
+      ]
+    },
+    {
+      "id": "TC-004",
+      "work_item_type": "Test Case",
+      "title": "Overbooking warning shows correct count for overlapping bookings",
+      "area_path": "Team Allocator/Overbooking",
+      "assigned_to": "Diogo Claro",
+      "state": "Active",
+      "playwright_file": "tests/test_overbooking.py::test_overbooking_warning",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Log in as Admin and create two overlapping bookings for the same employee on the same dates",
+          "expected": "Both bookings are created successfully"
+        },
+        {
+          "step": 2,
+          "action": "Observe the calendar for that employee on the overlapping dates",
+          "expected": "An overbooking warning is displayed showing '+1 overbooking'"
+        },
+        {
+          "step": 3,
+          "action": "Add a third overlapping booking for the same employee",
+          "expected": "The overbooking warning updates to '+2 overbooking'"
+        }
+      ]
+    },
+    {
+      "id": "TC-005",
+      "work_item_type": "Test Case",
+      "title": "Filter by project returns only that project's bookings",
+      "area_path": "Team Allocator/Views and Filters",
+      "assigned_to": "Diogo Claro",
+      "state": "Active",
+      "playwright_file": "tests/test_filters.py::test_filter_by_project",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Log in as Admin and open the calendar view",
+          "expected": "Calendar shows all employees and bookings"
+        },
+        {
+          "step": 2,
+          "action": "Apply the project filter for a specific project",
+          "expected": "Filter is applied and the calendar updates"
+        },
+        {
+          "step": 3,
+          "action": "Observe the calendar results",
+          "expected": "Only employees and bookings belonging to the selected project are shown — no other project's data is visible"
         }
       ]
     }
