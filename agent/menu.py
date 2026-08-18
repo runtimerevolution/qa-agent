@@ -14,6 +14,7 @@ def wait_for_menu():
 def test_cases_menu():
     """Submenu for Test Cases."""
     while True:
+        os.system("clear")
         print("\n📋 Test Cases\n")
 
         choice = questionary.select(
@@ -122,6 +123,7 @@ def test_cases_menu():
 def history_menu():
     """Submenu for History."""
     while True:
+        os.system("clear")
         print("\n📜 History\n")
 
         choice = questionary.select(
@@ -229,6 +231,7 @@ def create_pull_request():
 def pull_requests_menu():
     """Submenu for Pull Requests."""
     while True:
+        os.system("clear")
         print("\n🔀 Pull Requests\n")
 
         choice = questionary.select(
@@ -310,6 +313,7 @@ def pull_requests_menu():
 def roadmap_menu():
     """Submenu for Roadmap management."""
     while True:
+        os.system("clear")
         print("\n🗺️  Roadmap\n")
 
         choice = questionary.select(
@@ -383,6 +387,7 @@ def roadmap_menu():
 
 def main():
     while True:
+        os.system("clear")
         print("\n🤖 QA Agent\n")
 
         choice = questionary.select(
