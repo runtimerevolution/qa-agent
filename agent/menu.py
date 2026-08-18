@@ -25,6 +25,7 @@ def test_cases_menu():
                 "✏️  Update Test Case",
                 "👤 Assign Test Case",
                 "🎭 Run Playwright Test",
+                "🗑️  Delete Test Case",
                 "📊 Stats",
                 "📤 Export Test Cases History",
                 "⬅️  Back"
@@ -95,6 +96,11 @@ def test_cases_menu():
                 run_command(["run-test", test_id, "--simulate"])
             else:
                 run_command(["run-test", test_id])
+            wait_for_menu()
+            
+        elif choice == "🗑️  Delete Test Case":
+            test_id = questionary.text("Test Case ID (e.g. TC-001):").ask()
+            run_command(["delete-test", test_id])
             wait_for_menu()
 
         elif choice == "📊 Stats":

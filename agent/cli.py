@@ -281,6 +281,39 @@ def assign(test_id):
 
     click.echo(f"\n✅ TC '{test_id}' assigned to '{new_assignee}'!\n")
 
+# Command: delete a test case
+@cli.command()
+@click.argument("test_id")
+def delete_test(test_id):
+    """Delete a test case from the database. Ex: python agent/cli.py delete-test TC-001"""
+    with open(TEST_CASES_PATH, "r") as f:
+        data = json.load(f)
+
+    test = next((tc for tc in data["test_cases"] if tc["id"] == test_id), None)
+
+    if test is None:
+        click.echo(f"\n❌ Test case '{test_id}' not found.\n")
+        return
+
+    click.echo(f"\n🗑️  You are about to delete the following test case:")
+    click.echo(f"   {test['id']} | {test['title']} | {test['state']} | {test['assigned_to']}\n")
+
+    confirm = click.confirm("   Are you sure you want to delete this test case?", default=False)
+
+    if not confirm:
+        click.echo(f"\n❌ Deletion cancelled.\n")
+        return
+
+    data["test_cases"] = [tc for tc in data["test_cases"] if tc["id"] != test_id]
+
+    with open(TEST_CASES_PATH, "w") as f:
+        json.dump(data, f, indent=2, ensure_ascii=False)
+
+    log_event("test_deleted", test_id, f"Test case '{test['title']}' deleted")
+
+    click.echo(f"\n✅ Test case '{test_id}' successfully deleted!\n")
+
+
 # Command: run a playwright test
 @cli.command()
 @click.argument("test_id")
