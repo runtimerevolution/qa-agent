@@ -147,6 +147,48 @@
           "expected": "Only employees and bookings belonging to the selected project are shown — no other project's data is visible"
         }
       ]
+    },
+    {
+      "id": "TC-007",
+      "work_item_type": "Test Case",
+      "title": "Login system ",
+      "area_path": "Log in",
+      "assigned_to": "Diogo",
+      "state": "Active",
+      "playwright_file": "",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Open the website on the browser",
+          "expected": "the website opens"
+        },
+        {
+          "step": 2,
+          "action": "log in to the acount",
+          "expected": "it logs in "
+        }
+      ]
+    },
+    {
+      "id": "TC-007",
+      "work_item_type": "Test Case",
+      "title": "Login system",
+      "area_path": "login",
+      "assigned_to": "Diogo",
+      "state": "Active",
+      "playwright_file": "",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Enter the website",
+          "expected": "the website opens"
+        },
+        {
+          "step": 2,
+          "action": "login to the account",
+          "expected": "the account logs in"
+        }
+      ]
     }
   ]
 }
