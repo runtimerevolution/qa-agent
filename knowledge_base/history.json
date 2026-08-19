@@ -83,6 +83,30 @@
       "type": "test_created",
       "test_id": "TC-007",
       "details": "Test case 'Login system' created"
+    },
+    {
+      "timestamp": "2026-08-19 09:23",
+      "type": "test_updated",
+      "test_id": "TC-007",
+      "details": "Test case 'TC-007' updated"
+    },
+    {
+      "timestamp": "2026-08-19 09:24",
+      "type": "test_assigned",
+      "test_id": "TC-007",
+      "details": "Assigned from 'Diogo' to 'Wilker'"
+    },
+    {
+      "timestamp": "2026-08-19 09:25",
+      "type": "test_run",
+      "test_id": "TC-001",
+      "details": "Playwright test ran — result: Passed"
+    },
+    {
+      "timestamp": "2026-08-19 09:25",
+      "type": "test_deleted",
+      "test_id": "TC-007",
+      "details": "Test case 'Logout' deleted"
     }
   ]
 }
