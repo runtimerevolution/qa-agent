@@ -107,6 +107,78 @@
       "type": "test_deleted",
       "test_id": "TC-007",
       "details": "Test case 'Logout' deleted"
+    },
+    {
+      "timestamp": "2026-08-20 13:58",
+      "type": "test_created",
+      "test_id": "TC-007",
+      "details": "Test case 'Login' created"
+    },
+    {
+      "timestamp": "2026-08-20 14:01",
+      "type": "test_updated",
+      "test_id": "TC-007",
+      "details": "Test case 'TC-007' updated"
+    },
+    {
+      "timestamp": "2026-08-20 14:02",
+      "type": "test_assigned",
+      "test_id": "TC-007",
+      "details": "Assigned from 'Diogo' to 'Wilker'"
+    },
+    {
+      "timestamp": "2026-08-20 14:02",
+      "type": "test_run",
+      "test_id": "TC-001",
+      "details": "Playwright test ran — result: Passed"
+    },
+    {
+      "timestamp": "2026-08-20 14:03",
+      "type": "test_deleted",
+      "test_id": "TC-007",
+      "details": "Test case 'Logout' deleted"
+    },
+    {
+      "timestamp": "2026-08-20 16:19",
+      "type": "test_created",
+      "test_id": "TC-007",
+      "details": "Test case 'Login system' created"
+    },
+    {
+      "timestamp": "2026-08-20 16:20",
+      "type": "test_created",
+      "test_id": "TC-008",
+      "details": "Test case 'Log' created"
+    },
+    {
+      "timestamp": "2026-08-20 16:24",
+      "type": "test_updated",
+      "test_id": "TC-007",
+      "details": "Test case 'TC-007' updated"
+    },
+    {
+      "timestamp": "2026-08-20 16:25",
+      "type": "test_assigned",
+      "test_id": "TC-007",
+      "details": "Assigned from 'Diogo' to 'Wilker'"
+    },
+    {
+      "timestamp": "2026-08-20 16:28",
+      "type": "test_run",
+      "test_id": "TC-001",
+      "details": "Playwright test ran — result: Passed"
+    },
+    {
+      "timestamp": "2026-08-20 16:29",
+      "type": "test_deleted",
+      "test_id": "TC-007",
+      "details": "Test case 'Logout' deleted"
+    },
+    {
+      "timestamp": "2026-08-20 16:31",
+      "type": "test_run",
+      "test_id": "TC-001",
+      "details": "Playwright test ran — result: Passed"
     }
   ]
 }

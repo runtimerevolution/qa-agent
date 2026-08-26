@@ -103,12 +103,28 @@ def update_state(test_id, new_state):
 @cli.command()
 def add_test():
     """Add a new test case to the database."""
-    click.echo("\n➕ Add new Test Case\n")
+    click.echo("\n➕ Add new Test Case")
+    click.echo("   💡 Type 'cancel' at any point to abort.\n")
 
     test_id = click.prompt("   ID (ex: TC-003)")
+    if test_id.lower() == "cancel":
+        click.echo("\n❌ Test case creation cancelled.\n")
+        return
+
     title = click.prompt("   Title")
+    if title.lower() == "cancel":
+        click.echo("\n❌ Test case creation cancelled.\n")
+        return
+
     area_path = click.prompt("   Area (ex: Project/Login)")
+    if area_path.lower() == "cancel":
+        click.echo("\n❌ Test case creation cancelled.\n")
+        return
+
     assigned_to = click.prompt("   Assigned to")
+    if assigned_to.lower() == "cancel":
+        click.echo("\n❌ Test case creation cancelled.\n")
+        return
 
     steps = []
     step_num = 1
@@ -116,9 +132,15 @@ def add_test():
 
     while True:
         action = click.prompt(f"   Step {step_num} — Action", default="")
+        if action.lower() == "cancel":
+            click.echo("\n❌ Test case creation cancelled.\n")
+            return
         if action == "":
             break
         expected = click.prompt(f"   Step {step_num} — Expected result")
+        if expected.lower() == "cancel":
+            click.echo("\n❌ Test case creation cancelled.\n")
+            return
         steps.append({
             "step": step_num,
             "action": action,
@@ -164,12 +186,28 @@ def update_test(test_id):
         return
 
     click.echo(f"\n✏️  Updating test case '{test_id}' — {test['title']}")
-    click.echo("   Leave blank to keep the current value.\n")
+    click.echo("   Leave blank to keep the current value.")
+    click.echo("   💡 Type 'cancel' at any point to abort.\n")
 
     title = click.prompt(f"   Title", default=test["title"])
+    if title.lower() == "cancel":
+        click.echo("\n❌ Update cancelled.\n")
+        return
+
     area_path = click.prompt(f"   Area", default=test["area_path"])
+    if area_path.lower() == "cancel":
+        click.echo("\n❌ Update cancelled.\n")
+        return
+
     assigned_to = click.prompt(f"   Assigned to", default=test["assigned_to"])
+    if assigned_to.lower() == "cancel":
+        click.echo("\n❌ Update cancelled.\n")
+        return
+
     playwright_file = click.prompt(f"   Playwright file", default=test.get("playwright_file", ""))
+    if playwright_file.lower() == "cancel":
+        click.echo("\n❌ Update cancelled.\n")
+        return
 
     test["title"] = title
     test["area_path"] = area_path
@@ -267,9 +305,14 @@ def assign(test_id):
         return
 
     click.echo(f"\n👤 Assigning test case '{test_id}' — {test['title']}")
-    click.echo(f"   Current assignee: {test['assigned_to']}\n")
+    click.echo(f"   Current assignee: {test['assigned_to']}")
+    click.echo("   💡 Type 'cancel' to abort.\n")
 
     new_assignee = click.prompt("   New assignee")
+
+    if new_assignee.lower() == "cancel":
+        click.echo("\n❌ Assignment cancelled.\n")
+        return
 
     old_assignee = test["assigned_to"]
     test["assigned_to"] = new_assignee
@@ -636,11 +679,23 @@ def generate_test():
     """Generate a test case automatically using AI."""
     import ollama
 
-    click.echo("\n🤖 AI Test Case Generator\n")
+    click.echo("\n🤖 AI Test Case Generator")
+    click.echo("   💡 Type 'cancel' at any point to abort.\n")
 
     feature = click.prompt("   Describe the feature to test")
+    if feature.lower() == "cancel":
+        click.echo("\n❌ Generation cancelled.\n")
+        return
+
     area = click.prompt("   Area (ex: Project/Login)")
+    if area.lower() == "cancel":
+        click.echo("\n❌ Generation cancelled.\n")
+        return
+
     assigned_to = click.prompt("   Assigned to")
+    if assigned_to.lower() == "cancel":
+        click.echo("\n❌ Generation cancelled.\n")
+        return
 
     prompt = f"""
 You are a QA expert. Generate a test case for the following feature:

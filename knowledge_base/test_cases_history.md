@@ -9,3 +9,4 @@ Last updated: 2026-08-12
 - TC-003 | Viewer cannot create or edit bookings | Active | Diogo Claro
 - TC-004 | Overbooking warning shows correct count for overlapping bookings | Active | Diogo Claro
 - TC-005 | Filter by project returns only that project's bookings | Active | Diogo Claro
+- TC-008 | Log | Active | Diogo

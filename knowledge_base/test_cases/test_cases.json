@@ -147,6 +147,22 @@
           "expected": "Only employees and bookings belonging to the selected project are shown — no other project's data is visible"
         }
       ]
+    },
+    {
+      "id": "TC-008",
+      "work_item_type": "Test Case",
+      "title": "Log",
+      "area_path": "log",
+      "assigned_to": "Diogo",
+      "state": "Active",
+      "playwright_file": "",
+      "steps": [
+        {
+          "step": 1,
+          "action": "ad",
+          "expected": "asd"
+        }
+      ]
     }
   ]
 }

@@ -42,3 +42,11 @@
 - 09:24 | TC-007 | Assigned from 'Diogo' to 'Wilker'
 - 09:25 | TC-001 | Playwright test ran — result: Passed
 - 09:25 | TC-007 | Test case 'Logout' deleted
+
+## 2026-08-20
+
+- 13:58 | TC-007 | Test case 'Login' created
+- 14:01 | TC-007 | Test case 'TC-007' updated
+- 14:02 | TC-007 | Assigned from 'Diogo' to 'Wilker'
+- 14:02 | TC-001 | Playwright test ran — result: Passed
+- 14:03 | TC-007 | Test case 'Logout' deleted
