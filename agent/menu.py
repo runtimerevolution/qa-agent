@@ -146,21 +146,13 @@ def history_menu():
         elif choice == "⬅️  Back":
             break
 
-def create_pull_request():
+def create_pull_request(platform="GitHub"):
     """Interactive flow to create a Pull Request."""
 
-    print("\n🔀 Create Pull Request\n")
+    os.system("clear")
+    print(f"\n🔀 Create Pull Request — {platform}\n")
 
-    platform = questionary.select(
-        "Select platform:",
-        choices=["GitHub", "GitLab", "Cancel"]
-    ).ask()
-
-    if platform == "Cancel":
-        print("\n❌ PR creation cancelled.\n")
-        return
-
-    title = questionary.text("PR Title:").ask()
+    title = questionary.text("PR Title (leave blank to cancel):").ask()
     if not title:
         print("\n❌ PR creation cancelled.\n")
         return
@@ -234,62 +226,41 @@ def pull_requests_menu():
         os.system("clear")
         print("\n🔀 Pull Requests\n")
 
-        choice = questionary.select(
-            "What would you like to do?",
-            choices=[
-                "📋 View All PRs",
-                "🔍 Search PRs",
-                "➕ Create Pull Request",
-                "⬅️  Back"
-            ]
+        platform = questionary.select(
+            "Select platform:",
+            choices=["GitHub", "GitLab", "Bitbucket", "⬅️  Back to main menu"]
         ).ask()
 
-        if choice == "📋 View All PRs":
-            state = questionary.select(
-                "Show PRs with state:",
-                choices=["🟢 Open", "🔴 Closed", "🟣 Merged", "📋 All"]
-            ).ask()
+        if platform == "⬅️  Back to main menu":
+            return
 
-            state_map = {
-                "🟢 Open": "open",
-                "🔴 Closed": "closed",
-                "🟣 Merged": "merged",
-                "📋 All": "all"
-            }
-
-            run_command(["search-prs", "--state", state_map[state]])
+        if platform == "GitLab":
+            print("\n⚠️  GitLab integration coming soon.\n")
             wait_for_menu()
+            continue
 
-        elif choice == "🔍 Search PRs":
-            search_by = questionary.select(
-                "Search by:",
+        if platform == "Bitbucket":
+            print("\n⚠️  Bitbucket integration coming soon.\n")
+            wait_for_menu()
+            continue
+
+        while True:
+            os.system("clear")
+            print(f"\n🔀 Pull Requests — {platform}\n")
+
+            choice = questionary.select(
+                "What would you like to do?",
                 choices=[
-                    "🔤 Title",
-                    "👤 Author",
-                    "👥 Reviewer",
-                    "🔵 State",
+                    "📋 View All PRs",
+                    "🔍 Search PRs",
+                    "➕ Create Pull Request",
                     "⬅️  Back"
                 ]
             ).ask()
 
-            if search_by == "⬅️  Back":
-                continue
-
-            if search_by == "🔤 Title":
-                value = questionary.text("Title (min. 3 characters):").ask()
-                run_command(["search-prs", "--title", value])
-
-            elif search_by == "👤 Author":
-                value = questionary.text("Author username:").ask()
-                run_command(["search-prs", "--author", value])
-
-            elif search_by == "👥 Reviewer":
-                value = questionary.text("Reviewer username:").ask()
-                run_command(["search-prs", "--reviewer", value])
-
-            elif search_by == "🔵 State":
-                value = questionary.select(
-                    "Select state:",
+            if choice == "📋 View All PRs":
+                state = questionary.select(
+                    "Show PRs with state:",
                     choices=["🟢 Open", "🔴 Closed", "🟣 Merged", "📋 All"]
                 ).ask()
 
@@ -300,16 +271,60 @@ def pull_requests_menu():
                     "📋 All": "all"
                 }
 
-                run_command(["search-prs", "--state", state_map[value]])
+                run_command(["search-prs", "--state", state_map[state]])
+                wait_for_menu()
 
-            wait_for_menu()
+            elif choice == "🔍 Search PRs":
+                search_by = questionary.select(
+                    "Search by:",
+                    choices=[
+                        "🔤 Title",
+                        "👤 Author",
+                        "👥 Reviewer",
+                        "🔵 State",
+                        "⬅️  Back"
+                    ]
+                ).ask()
 
-        elif choice == "➕ Create Pull Request":
-            create_pull_request()
-            wait_for_menu()
+                if search_by == "⬅️  Back":
+                    continue
 
-        elif choice == "⬅️  Back":
-            break
+                if search_by == "🔤 Title":
+                    value = questionary.text("Title (min. 3 characters):").ask()
+                    run_command(["search-prs", "--title", value])
+
+                elif search_by == "👤 Author":
+                    value = questionary.text("Author username:").ask()
+                    run_command(["search-prs", "--author", value])
+
+                elif search_by == "👥 Reviewer":
+                    value = questionary.text("Reviewer username:").ask()
+                    run_command(["search-prs", "--reviewer", value])
+
+                elif search_by == "🔵 State":
+                    value = questionary.select(
+                        "Select state:",
+                        choices=["🟢 Open", "🔴 Closed", "🟣 Merged", "📋 All"]
+                    ).ask()
+
+                    state_map = {
+                        "🟢 Open": "open",
+                        "🔴 Closed": "closed",
+                        "🟣 Merged": "merged",
+                        "📋 All": "all"
+                    }
+
+                    run_command(["search-prs", "--state", state_map[value]])
+
+                wait_for_menu()
+
+            elif choice == "➕ Create Pull Request":
+                create_pull_request(platform)
+                wait_for_menu()
+
+            elif choice == "⬅️  Back":
+                break
+
 def roadmap_menu():
     """Submenu for Roadmap management."""
     while True:
