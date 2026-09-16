@@ -152,22 +152,7 @@ def create_pull_request(platform="GitHub"):
     os.system("clear")
     print(f"\n🔀 Create Pull Request — {platform}\n")
 
-<<<<<<< HEAD
     title = questionary.text("PR Title (leave blank to cancel):").ask()
-=======
-    # Select platform
-    platform = questionary.select(
-        "Select platform:",
-        choices=["GitHub", "GitLab", "Bitbucket", "Cancel"]
-    ).ask()
-
-    if platform == "Cancel":
-        print("\n❌ PR creation cancelled.\n")
-        return
-
-    # PR Title
-    title = questionary.text("PR Title:").ask()
->>>>>>> feature/bitbucket-setup
     if not title:
         print("\n❌ PR creation cancelled.\n")
         return

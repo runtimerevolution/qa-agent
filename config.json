@@ -1,8 +1,10 @@
 {
-  "project": "QA Agent",
+  "project": "Team Allocator",
   "platform": "GitHub",
   "available_platforms": ["GitHub", "GitLab", "Bitbucket"],
   "base_branch": "main",
-  "slack_channel": "",
-  "slack_token": ""
+  "ai_provider": "ollama",
+  "available_ai_providers": ["ollama", "claude", "openai"],
+  "ai_model": "llama3.2",
+  "api_key": ""
 }

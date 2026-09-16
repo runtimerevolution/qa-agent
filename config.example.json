@@ -3,6 +3,8 @@
   "platform": "GitHub",
   "available_platforms": ["GitHub", "GitLab", "Bitbucket"],
   "base_branch": "main",
-  "slack_channel": "#your-channel",
-  "slack_token": "your-slack-token-here"
+  "ai_provider": "ollama",
+  "available_ai_providers": ["ollama", "claude", "openai"],
+  "ai_model": "llama3.2",
+  "api_key": ""
 }
