@@ -1,0 +1,8 @@
+{
+  "project": "Your Project Name",
+  "platform": "GitHub",
+  "available_platforms": ["GitHub", "GitLab", "Bitbucket"],
+  "base_branch": "main",
+  "slack_channel": "#your-channel",
+  "slack_token": "your-slack-token-here"
+}

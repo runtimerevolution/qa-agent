@@ -152,7 +152,22 @@ def create_pull_request(platform="GitHub"):
     os.system("clear")
     print(f"\n🔀 Create Pull Request — {platform}\n")
 
+<<<<<<< HEAD
     title = questionary.text("PR Title (leave blank to cancel):").ask()
+=======
+    # Select platform
+    platform = questionary.select(
+        "Select platform:",
+        choices=["GitHub", "GitLab", "Bitbucket", "Cancel"]
+    ).ask()
+
+    if platform == "Cancel":
+        print("\n❌ PR creation cancelled.\n")
+        return
+
+    # PR Title
+    title = questionary.text("PR Title:").ask()
+>>>>>>> feature/bitbucket-setup
     if not title:
         print("\n❌ PR creation cancelled.\n")
         return
@@ -220,6 +235,7 @@ def create_pull_request(platform="GitHub"):
     elif platform == "GitLab":
         print("\n⚠️  GitLab integration coming soon.\n")
 
+<<<<<<< HEAD
 def pull_requests_menu():
     """Submenu for Pull Requests."""
     while True:
@@ -399,6 +415,10 @@ def roadmap_menu():
 
         elif choice == "⬅️  Back":
             break
+=======
+    elif platform == "Bitbucket":
+        print("\n⚠️  Bitbucket integration coming soon.\n")
+>>>>>>> feature/bitbucket-setup
 
 def main():
     while True:
