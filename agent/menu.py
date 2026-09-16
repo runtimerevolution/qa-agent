@@ -235,7 +235,6 @@ def create_pull_request(platform="GitHub"):
     elif platform == "GitLab":
         print("\n⚠️  GitLab integration coming soon.\n")
 
-<<<<<<< HEAD
 def pull_requests_menu():
     """Submenu for Pull Requests."""
     while True:
@@ -415,10 +414,6 @@ def roadmap_menu():
 
         elif choice == "⬅️  Back":
             break
-=======
-    elif platform == "Bitbucket":
-        print("\n⚠️  Bitbucket integration coming soon.\n")
->>>>>>> feature/bitbucket-setup
 
 def main():
     while True:
