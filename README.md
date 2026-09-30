@@ -151,6 +151,44 @@ python agent/cli.py ask "What should I test next?"
 python agent/cli.py ask "What test cases do we have for the Login module?"
 python agent/cli.py ask "What are the team guidelines for automation?"
 ```
+
+## 🩺 Check Installation (`doctor`)
+
+### What it does
+
+Checks that everything the QA Agent needs is installed and configured on your computer, and tells you how to fix anything that is missing. Run it right after installing the QA Agent, or whenever something is not working as expected.
+
+```bash
+python -m agent.cli doctor
+```
+
+It is also available in the interactive menu under **🩺 Check Installation**.
+
+### Result icons
+
+| Icon | Meaning |
+|------|---------|
+| ✅ | Everything is fine |
+| ⚠️ | The QA Agent works, but some features are limited |
+| ❌ | Must be fixed before the QA Agent can work |
+
+### What is checked
+
+| Check | If it fails |
+|-------|-------------|
+| Python version (3.10 or newer) | ❌ The QA Agent cannot run |
+| `config.json` exists and is valid | ❌ The QA Agent cannot read its settings |
+| Git is installed | ❌ Branch and PR features cannot work |
+| GitHub CLI is installed and logged in | ⚠️ PR features are unavailable |
+| AI provider is ready (for Ollama: installed, running and model downloaded) | ⚠️ AI features are unavailable |
+
+### Technical notes
+
+- All checks live in `agent/doctor.py`. Each check is a small function that returns a status (`ok`, `warning` or `error`) and a message.
+- Installed programs are detected with `shutil.which`, and commands are run with `subprocess` using a 10-second timeout, so the checks work the same way on macOS and Windows.
+- The AI check reads `ai_provider` and `ai_model` from `config.json` through `load_config()`, so it always follows each person's configuration.
+- To add a new check, write a new function in `agent/doctor.py` and add it to the list in `run_doctor()`.
+
 ## Interactive Menu
 
 Instead of typing commands manually, you can use the interactive menu:
@@ -168,4 +206,5 @@ Navigate with the arrow keys and press Enter to select an option. Available opti
 - 📤 **Export History** — exports change history to Markdown
 - 📤 **Export Test Cases History** — exports test cases history to Markdown
 - 🤖 **Ask AI** — asks a question to the AI agent
+- 🩺 **Check Installation** — checks that everything the QA Agent needs is installed and configured
 - ❌ **Exit** — exits the menu

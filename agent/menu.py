@@ -413,6 +413,7 @@ def main():
                 "📜 History",
                 "🤖 Ask AI",
                 "🔀 Pull Requests",
+                "🩺 Check Installation",
                 "❌ Exit"
             ]
         ).ask()
@@ -433,6 +434,10 @@ def main():
 
         elif choice == "🔀 Pull Requests":
             pull_requests_menu()
+        
+        elif choice == "🩺 Check Installation":
+            run_command(["doctor"])
+            wait_for_menu()
 
         elif choice == "❌ Exit":
             print("\n👋 Goodbye!\n")
