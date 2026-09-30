@@ -7,6 +7,57 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TEST_CASES_PATH = os.path.join(BASE_DIR, "knowledge_base", "test_cases", "test_cases.json")
 HISTORY_PATH = os.path.join(BASE_DIR, "knowledge_base", "history.json")
 
+CONFIG_PATH = os.path.join(BASE_DIR, "config.json")
+
+def load_config():
+    """Loads the project configuration. Falls back to defaults if not found."""
+    defaults = {
+        "ai_provider": "ollama",
+        "ai_model": "llama3.2",
+        "api_key": ""
+    }
+
+    if not os.path.exists(CONFIG_PATH):
+        return defaults
+
+    try:
+        with open(CONFIG_PATH, "r") as f:
+            config = json.load(f)
+        return {**defaults, **config}
+    except Exception:
+        return defaults
+
+def ask_ai(prompt):
+    """Sends a prompt to the configured AI provider and returns the response text."""
+    config = load_config()
+    provider = config.get("ai_provider", "ollama").lower()
+    model = config.get("ai_model", "llama3.2")
+
+    if provider == "ollama":
+        import ollama
+        response = ollama.chat(
+            model=model,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        return response["message"]["content"]
+
+    elif provider == "claude":
+        raise NotImplementedError(
+            "Claude integration is not enabled yet.\n"
+            "   It requires an Anthropic API key (console.anthropic.com).\n"
+            "   Set 'ai_provider' to 'ollama' in config.json to continue."
+        )
+
+    elif provider == "openai":
+        raise NotImplementedError(
+            "OpenAI integration is not enabled yet.\n"
+            "   It requires an OpenAI API key.\n"
+            "   Set 'ai_provider' to 'ollama' in config.json to continue."
+        )
+
+    else:
+        raise ValueError(f"Unknown AI provider: '{provider}'. Use: ollama, claude, openai")
+    
 def log_event(event_type, test_id, details):
     """Logs an event to the project history."""
     from datetime import datetime
@@ -677,8 +728,6 @@ def export_tests_history():
 @cli.command()
 def generate_test():
     """Generate a test case automatically using AI."""
-    import ollama
-
     click.echo("\n🤖 AI Test Case Generator")
     click.echo("   💡 Type 'cancel' at any point to abort.\n")
 
@@ -718,16 +767,20 @@ Respond ONLY in this exact JSON format, nothing else:
 Generate between 3 and 5 steps. Be specific and technical.
 """
 
-    click.echo("\n⏳ Generating test case...\n")
+    config = load_config()
+    click.echo(f"\n⏳ Generating test case... (using {config['ai_provider']} / {config['ai_model']})\n")
 
-    response = ollama.chat(
-        model="llama3.2",
-        messages=[{"role": "user", "content": prompt}]
-    )
+    try:
+        raw = ask_ai(prompt)
+    except NotImplementedError as e:
+        click.echo(f"\n⚠️  {e}\n")
+        return
+    except Exception as e:
+        click.echo(f"\n❌ Error contacting the AI provider: {e}\n")
+        return
 
     import json as json_module
     try:
-        raw = response["message"]["content"]
         start = raw.find("{")
         end = raw.rfind("}") + 1
         generated = json_module.loads(raw[start:end])
@@ -781,8 +834,6 @@ Generate between 3 and 5 steps. Be specific and technical.
 @click.argument("question")
 def ask(question):
     """Ask a question to the AI agent based on the Knowledge Base."""
-    import ollama
-
     with open(TEST_CASES_PATH, "r") as f:
         test_cases = json.load(f)
 
@@ -809,14 +860,20 @@ TEST CASES:
 Answer the following question: {question}
 """
 
-    click.echo("\n🤖 Thinking...\n")
+    config = load_config()
+    click.echo(f"\n🤖 Thinking... (using {config['ai_provider']} / {config['ai_model']})\n")
 
-    response = ollama.chat(
-        model="llama3.2",
-        messages=[{"role": "user", "content": context}]
-    )
+    try:
+        answer = ask_ai(context)
+    except NotImplementedError as e:
+        click.echo(f"\n⚠️  {e}\n")
+        return
+    except Exception as e:
+        click.echo(f"\n❌ Error contacting the AI provider: {e}\n")
+        return
 
-    click.echo(f"{response['message']['content']}\n")
+    click.echo(f"{answer}\n")
+
 
 if __name__ == "__main__":
     cli()
