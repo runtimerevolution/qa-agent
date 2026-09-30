@@ -3,6 +3,8 @@
 import json
 import os
 import sys
+import shutil
+import subprocess
 
 # Minimum Python version supported by the QA Agent.
 MIN_PYTHON = (3, 10)
@@ -14,6 +16,18 @@ WARNING = "warning"
 
 ICONS = {OK: "✅", ERROR: "❌", WARNING: "⚠️ "}
 
+def is_installed(program):
+    """Return True if a program is available on this computer."""
+    return shutil.which(program) is not None
+
+
+def run_command(command):
+    """Run a command quietly. Return (success, output)."""
+    try:
+        result = subprocess.run(command, capture_output=True, text=True, timeout=10)
+        return result.returncode == 0, result.stdout
+    except (OSError, subprocess.TimeoutExpired):
+        return False, ""
 
 def check_python():
     """Check that the Python version is supported."""
@@ -40,10 +54,55 @@ def check_config(config_path):
 
     return OK, "config.json found"
 
+def check_git():
+    """Check that Git is installed."""
+    if is_installed("git"):
+        return OK, "Git installed"
+    return ERROR, "Git not found → install it from https://git-scm.com"
 
-def run_doctor(config_path):
+
+def check_github_cli():
+    """Check that the GitHub CLI is installed and logged in."""
+    if not is_installed("gh"):
+        return WARNING, "GitHub CLI not found → install it from https://cli.github.com (needed for PR features)"
+
+    logged_in, _ = run_command(["gh", "auth", "status"])
+    if not logged_in:
+        return WARNING, "GitHub CLI not logged in → run: gh auth login"
+
+    return OK, "GitHub CLI installed and logged in"
+
+
+def check_ai(config):
+    """Check that the configured AI provider is ready to use."""
+    provider = config.get("ai_provider", "").lower()
+    model = config.get("ai_model", "")
+
+    if provider == "ollama":
+        if not is_installed("ollama"):
+            return WARNING, "Ollama not found → install it from https://ollama.com (only needed for AI features)"
+
+        running, output = run_command(["ollama", "list"])
+        if not running:
+            return WARNING, "Ollama is not running → run: ollama serve"
+
+        if model not in output:
+            return WARNING, f"Model '{model}' not downloaded → run: ollama pull {model}"
+
+        return OK, f"AI ready ({provider} / {model})"
+
+    if provider in ("claude", "openai"):
+        return WARNING, f"AI provider '{provider}' is not available yet → set 'ai_provider' to 'ollama' in config.json"
+
+    return WARNING, f"Unknown AI provider '{provider}' → use: ollama, claude or openai"
+
+
+def run_doctor(config_path, config):
     """Run all checks and return a list of (status, message) results."""
     return [
         check_python(),
         check_config(config_path),
+        check_git(),
+        check_github_cli(),
+        check_ai(config),
     ]
