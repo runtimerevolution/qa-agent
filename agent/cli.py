@@ -1,6 +1,7 @@
 import click
 import json
 import os
+from agent.doctor import run_doctor, ICONS, ERROR
 
 # Path to knowledge base
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -818,5 +819,22 @@ Answer the following question: {question}
 
     click.echo(f"{response['message']['content']}\n")
 
+@cli.command()
+def doctor():
+    """Check that everything needed by the QA Agent is installed."""
+    click.echo("\n🩺 Checking your QA Agent installation...\n")
+
+    results = run_doctor(CONFIG_PATH)
+
+    for status, message in results:
+        click.echo(f"  {ICONS[status]} {message}")
+
+    errors = sum(1 for status, _ in results if status == ERROR)
+    if errors:
+        click.echo(f"\n{errors} problem(s) found. Fix them and run 'doctor' again.\n")
+    else:
+        click.echo("\nEverything looks good! 🎉\n")
+
+        
 if __name__ == "__main__":
     cli()
