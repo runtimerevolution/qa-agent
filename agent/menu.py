@@ -11,10 +11,15 @@ def wait_for_menu():
     """Waits for the user to press Enter before returning to the menu."""
     input("\nPress Enter to return to the menu...")
 
+def clear_screen():
+    """Clears the terminal screen on macOS, Linux and Windows."""
+    os.system("cls" if os.name == "nt" else "clear")
+
+
 def test_cases_menu():
     """Submenu for Test Cases."""
     while True:
-        os.system("clear")
+        clear_screen()
         print("\n📋 Test Cases\n")
 
         choice = questionary.select(
@@ -123,7 +128,7 @@ def test_cases_menu():
 def history_menu():
     """Submenu for History."""
     while True:
-        os.system("clear")
+        clear_screen()
         print("\n📜 History\n")
 
         choice = questionary.select(
@@ -149,7 +154,7 @@ def history_menu():
 def create_pull_request(platform="GitHub"):
     """Interactive flow to create a Pull Request."""
 
-    os.system("clear")
+    clear_screen()
     print(f"\n🔀 Create Pull Request — {platform}\n")
 
     title = questionary.text("PR Title (leave blank to cancel):").ask()
@@ -223,7 +228,7 @@ def create_pull_request(platform="GitHub"):
 def pull_requests_menu():
     """Submenu for Pull Requests."""
     while True:
-        os.system("clear")
+        clear_screen()
         print("\n🔀 Pull Requests\n")
 
         platform = questionary.select(
@@ -245,7 +250,7 @@ def pull_requests_menu():
             continue
 
         while True:
-            os.system("clear")
+            clear_screen()
             print(f"\n🔀 Pull Requests — {platform}\n")
 
             choice = questionary.select(
@@ -328,7 +333,7 @@ def pull_requests_menu():
 def roadmap_menu():
     """Submenu for Roadmap management."""
     while True:
-        os.system("clear")
+        clear_screen()
         print("\n🗺️  Roadmap\n")
 
         choice = questionary.select(
@@ -402,7 +407,7 @@ def roadmap_menu():
 
 def main():
     while True:
-        os.system("clear")
+        clear_screen()
         print("\n🤖 QA Agent\n")
 
         choice = questionary.select(
