@@ -227,7 +227,18 @@ def create_pull_request(platform="GitHub"):
             subprocess.run(["git", "add", "--"] + selected)
             subprocess.run(["git", "commit", "-m", title])
         else:
-            print("\nℹ️  No files selected. Only existing commits will be pushed.\n")
+            next_step = questionary.select(
+                "No files selected. What would you like to do?",
+                choices=[
+                    "⬅️  Cancel and go back (nothing is lost)",
+                    "📤 Continue with existing commits only"
+                ]
+            ).ask()
+
+            if next_step != "📤 Continue with existing commits only":
+                print("\n❌ PR creation cancelled.")
+                print("💡 Tip: use Space to select files, then Enter to confirm.\n")
+                return
 
     print("\n⏳ Preparing your Pull Request...\n")
 
