@@ -11,6 +11,22 @@ def wait_for_menu():
     """Waits for the user to press Enter before returning to the menu."""
     input("\nPress Enter to return to the menu...")
 
+def get_changed_files():
+    """Returns the list of files with uncommitted changes."""
+    result = subprocess.run(
+        ["git", "status", "--porcelain"],
+        capture_output=True,
+        text=True
+    )
+
+    files = []
+    for line in result.stdout.splitlines():
+        path = line[3:].strip('"')
+        if " -> " in path:
+            path = path.split(" -> ")[1]
+        files.append(path)
+    return files
+
 def test_cases_menu():
     """Submenu for Test Cases."""
     while True:
@@ -199,10 +215,22 @@ def create_pull_request(platform="GitHub"):
         print("💡 Tip: Run 'git checkout -b feature/your-feature-name' to create a new branch.\n")
         return
 
+    changed_files = get_changed_files()
+
+    if changed_files:
+        selected = questionary.checkbox(
+            "Select the files to include (Space to select, Enter to confirm):",
+            choices=changed_files
+        ).ask()
+
+        if selected:
+            subprocess.run(["git", "add", "--"] + selected)
+            subprocess.run(["git", "commit", "-m", title])
+        else:
+            print("\nℹ️  No files selected. Only existing commits will be pushed.\n")
+
     print("\n⏳ Preparing your Pull Request...\n")
 
-    subprocess.run(["git", "add", "."])
-    subprocess.run(["git", "commit", "-m", title])
     subprocess.run(["git", "push", "--set-upstream", "origin", current_branch])
 
     if platform == "GitHub":
