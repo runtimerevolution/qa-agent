@@ -3,8 +3,11 @@
   "platform": "GitHub",
   "available_platforms": ["GitHub", "GitLab", "Bitbucket"],
   "base_branch": "main",
+  "ai_enabled": true,
   "ai_provider": "ollama",
-  "available_ai_providers": ["ollama", "claude", "openai"],
-  "ai_model": "llama3.2",
-  "api_key": ""
+  "ai_models": {
+  "ollama": "llama3.2",
+  "claude": "claude-sonnet-5",
+  "openai": ""
+}
 }
