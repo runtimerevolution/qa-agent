@@ -907,7 +907,7 @@ def doctor():
     """Check that everything needed by the QA Agent is installed."""
     click.echo("\n🩺 Checking your QA Agent installation...\n")
 
-    results = run_doctor(CONFIG_PATH, load_config())
+    results = run_doctor(CONFIG_PATH, get_ai_settings(load_config()))
 
     for status, message in results:
         click.echo(f"  {ICONS[status]} {message}")
