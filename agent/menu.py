@@ -11,6 +11,21 @@ def wait_for_menu():
     """Waits for the user to press Enter before returning to the menu."""
     input("\nPress Enter to return to the menu...")
 
+def get_changed_files():
+    """Returns the list of files with uncommitted changes."""
+    result = subprocess.run(
+        ["git", "status", "--porcelain"],
+        capture_output=True,
+        text=True
+    )
+
+    files = []
+    for line in result.stdout.splitlines():
+        path = line[3:].strip('"')
+        if " -> " in path:
+            path = path.split(" -> ")[1]
+        files.append(path)
+    return files
 def clear_screen():
     """Clears the terminal screen on macOS, Linux and Windows."""
     os.system("cls" if os.name == "nt" else "clear")
@@ -204,10 +219,33 @@ def create_pull_request(platform="GitHub"):
         print("💡 Tip: Run 'git checkout -b feature/your-feature-name' to create a new branch.\n")
         return
 
+    changed_files = get_changed_files()
+
+    if changed_files:
+        selected = questionary.checkbox(
+            "Select the files to include (Space to select, Enter to confirm):",
+            choices=changed_files
+        ).ask()
+
+        if selected:
+            subprocess.run(["git", "add", "--"] + selected)
+            subprocess.run(["git", "commit", "-m", title])
+        else:
+            next_step = questionary.select(
+                "No files selected. What would you like to do?",
+                choices=[
+                    "⬅️  Cancel and go back (nothing is lost)",
+                    "📤 Continue with existing commits only"
+                ]
+            ).ask()
+
+            if next_step != "📤 Continue with existing commits only":
+                print("\n❌ PR creation cancelled.")
+                print("💡 Tip: use Space to select files, then Enter to confirm.\n")
+                return
+
     print("\n⏳ Preparing your Pull Request...\n")
 
-    subprocess.run(["git", "add", "."])
-    subprocess.run(["git", "commit", "-m", title])
     subprocess.run(["git", "push", "--set-upstream", "origin", current_branch])
 
     if platform == "GitHub":
