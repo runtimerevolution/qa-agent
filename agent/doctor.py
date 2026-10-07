@@ -73,36 +73,41 @@ def check_github_cli():
     return OK, "GitHub CLI installed and logged in"
 
 
-def check_ai(config):
+def check_ai(ai_settings):
     """Check that the configured AI provider is ready to use."""
-    provider = config.get("ai_provider", "").lower()
-    model = config.get("ai_model", "")
+    enabled, provider, model = ai_settings
 
-    if provider == "ollama":
-        if not is_installed("ollama"):
-            return WARNING, "Ollama not found → install it from https://ollama.com (only needed for AI features)"
-
-        running, output = run_command(["ollama", "list"])
-        if not running:
-            return WARNING, "Ollama is not running → run: ollama serve"
-
-        if model not in output:
-            return WARNING, f"Model '{model}' not downloaded → run: ollama pull {model}"
-
-        return OK, f"AI ready ({provider} / {model})"
+    if not enabled:
+        return OK, 'AI features turned off (set "ai_enabled" to true in config.json to use them)'
 
     if provider in ("claude", "openai"):
         return WARNING, f"AI provider '{provider}' is not available yet → set 'ai_provider' to 'ollama' in config.json"
 
-    return WARNING, f"Unknown AI provider '{provider}' → use: ollama, claude or openai"
+    if provider != "ollama":
+        return WARNING, f"Unknown AI provider '{provider}' → check 'ai_provider' in config.json"
+
+    if not model:
+        return WARNING, f"No model set for '{provider}' → add it to 'ai_models' in config.json"
+
+    if not is_installed("ollama"):
+        return WARNING, "Ollama not found → install it from https://ollama.com (only needed for AI features)"
+
+    running, output = run_command(["ollama", "list"])
+    if not running:
+        return WARNING, "Ollama is not running → run: ollama serve"
+
+    if model not in output:
+        return WARNING, f"Model '{model}' not downloaded → run: ollama pull {model}"
+
+    return OK, f"AI ready ({provider} / {model})"
 
 
-def run_doctor(config_path, config):
+def run_doctor(config_path, ai_settings):
     """Run all checks and return a list of (status, message) results."""
     return [
         check_python(),
         check_config(config_path),
         check_git(),
         check_github_cli(),
-        check_ai(config),
+        check_ai(ai_settings),
     ]

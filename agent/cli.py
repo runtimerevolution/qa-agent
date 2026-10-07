@@ -13,11 +13,10 @@ CONFIG_PATH = os.path.join(BASE_DIR, "config.json")
 def load_config():
     """Loads the project configuration. Falls back to defaults if not found."""
     defaults = {
+        "ai_enabled": True,
         "ai_provider": "ollama",
-        "ai_model": "llama3.2",
-        "api_key": ""
-    }
-
+        "ai_models": {"ollama": "llama3.2"},
+    }   
     if not os.path.exists(CONFIG_PATH):
         return defaults
 
@@ -28,11 +27,39 @@ def load_config():
     except Exception:
         return defaults
 
-def ask_ai(prompt):
-    """Sends a prompt to the configured AI provider and returns the response text."""
-    config = load_config()
+def get_ai_settings(config):
+    """Returns (enabled, provider, model) from the configuration."""
+    enabled = config.get("ai_enabled", True)
     provider = config.get("ai_provider", "ollama").lower()
-    model = config.get("ai_model", "llama3.2")
+    models = config.get("ai_models", {})
+
+    # Fallback for older config files that still use a single "ai_model" field.
+    model = models.get(provider) or config.get("ai_model", "")
+
+    return enabled, provider, model
+
+def check_ai_enabled():
+    """Returns True if the AI is turned on. If not, explains how to turn it on."""
+    enabled, _, _ = get_ai_settings(load_config())
+
+    if not enabled:
+        click.echo("\n⚪ AI features are turned off.")
+        click.echo('💡 To turn them on, set "ai_enabled" to true in config.json.\n')
+
+    return enabled
+
+
+def show_ai_thinking():
+    """Shows which AI provider and model are being used."""
+    if not check_ai_enabled():
+        return
+    _, provider, model = get_ai_settings(load_config())
+    click.echo(f"\n🤔 Thinking... (using {provider} / {model})\n")
+
+def ask_ai(prompt):
+    """Sends a prompt to the configured AI provider and returns the answer."""
+    config = load_config()
+    _, provider, model = get_ai_settings(config)
 
     if provider == "ollama":
         import ollama
@@ -45,19 +72,20 @@ def ask_ai(prompt):
     elif provider == "claude":
         raise NotImplementedError(
             "Claude integration is not enabled yet.\n"
-            "   It requires an Anthropic API key (console.anthropic.com).\n"
+            "   It will require an Anthropic API key in the ANTHROPIC_API_KEY environment variable.\n"
             "   Set 'ai_provider' to 'ollama' in config.json to continue."
         )
 
     elif provider == "openai":
         raise NotImplementedError(
             "OpenAI integration is not enabled yet.\n"
-            "   It requires an OpenAI API key.\n"
+            "   It will require an OpenAI API key in the OPENAI_API_KEY environment variable.\n"
             "   Set 'ai_provider' to 'ollama' in config.json to continue."
         )
 
     else:
-        raise ValueError(f"Unknown AI provider: '{provider}'. Use: ollama, claude, openai")
+        available = ", ".join(config.get("ai_models", {}))
+        raise ValueError(f"Unknown AI provider: '{provider}'. Use one of: {available}")
     
 def log_event(event_type, test_id, details):
     """Logs an event to the project history."""
@@ -861,9 +889,7 @@ TEST CASES:
 Answer the following question: {question}
 """
 
-    config = load_config()
-    click.echo(f"\n🤖 Thinking... (using {config['ai_provider']} / {config['ai_model']})\n")
-
+    show_ai_thinking()
     try:
         answer = ask_ai(context)
     except NotImplementedError as e:
@@ -881,7 +907,7 @@ def doctor():
     """Check that everything needed by the QA Agent is installed."""
     click.echo("\n🩺 Checking your QA Agent installation...\n")
 
-    results = run_doctor(CONFIG_PATH, load_config())
+    results = run_doctor(CONFIG_PATH, get_ai_settings(load_config()))
 
     for status, message in results:
         click.echo(f"  {ICONS[status]} {message}")
