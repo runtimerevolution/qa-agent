@@ -9,14 +9,16 @@ TEST_CASES_PATH = os.path.join(BASE_DIR, "knowledge_base", "test_cases", "test_c
 HISTORY_PATH = os.path.join(BASE_DIR, "knowledge_base", "history.json")
 
 CONFIG_PATH = os.path.join(BASE_DIR, "config.json")
+CACHE_PATH = os.path.join(os.path.dirname(CONFIG_PATH), ".ai_cache.json")
 
 def load_config():
     """Loads the project configuration. Falls back to defaults if not found."""
     defaults = {
         "ai_enabled": True,
+        "ai_cache_enabled": True,
         "ai_provider": "ollama",
         "ai_models": {"ollama": "llama3.2"},
-    }   
+    } 
     if not os.path.exists(CONFIG_PATH):
         return defaults
 
