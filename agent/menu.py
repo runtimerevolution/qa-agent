@@ -471,9 +471,7 @@ def main():
             history_menu()
 
         elif choice == "🤖 Ask AI":
-            question = questionary.text("What would you like to ask?").ask()
-            run_command(["ask", question])
-            wait_for_menu()
+            ai_menu()
 
         elif choice == "🔀 Pull Requests":
             pull_requests_menu()
@@ -484,6 +482,41 @@ def main():
 
         elif choice == "❌ Exit":
             print("\n👋 Goodbye!\n")
+            break
+
+def ai_menu():
+    """Submenu for AI features."""
+    while True:
+        clear_screen()
+        print("\n🤖 Ask AI\n")
+
+        choice = questionary.select(
+            "What would you like to do?",
+            choices=[
+                "💬 Ask a Question",
+                "🔄 Ask Again (ignore saved answers)",
+                "🧹 Clear Saved Answers",
+                "⬅️  Back"
+            ]
+        ).ask()
+
+        if choice == "💬 Ask a Question":
+            question = questionary.text("What would you like to ask?").ask()
+            if question:
+                run_command(["ask", question])
+            wait_for_menu()
+
+        elif choice == "🔄 Ask Again (ignore saved answers)":
+            question = questionary.text("What would you like to ask?").ask()
+            if question:
+                run_command(["ask", question, "--no-cache"])
+            wait_for_menu()
+
+        elif choice == "🧹 Clear Saved Answers":
+            run_command(["clear-cache"])
+            wait_for_menu()
+
+        else:
             break
 
 if __name__ == "__main__":
