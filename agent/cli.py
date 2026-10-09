@@ -2,6 +2,7 @@ import click
 import json
 import os
 from agent.doctor import run_doctor, ICONS, ERROR, WARNING
+from agent.ai_cache import make_key, get_cached_answer, save_answer, clear_cache
 
 # Path to knowledge base
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -9,14 +10,16 @@ TEST_CASES_PATH = os.path.join(BASE_DIR, "knowledge_base", "test_cases", "test_c
 HISTORY_PATH = os.path.join(BASE_DIR, "knowledge_base", "history.json")
 
 CONFIG_PATH = os.path.join(BASE_DIR, "config.json")
+CACHE_PATH = os.path.join(os.path.dirname(CONFIG_PATH), ".ai_cache.json")
 
 def load_config():
     """Loads the project configuration. Falls back to defaults if not found."""
     defaults = {
         "ai_enabled": True,
+        "ai_cache_enabled": True,
         "ai_provider": "ollama",
         "ai_models": {"ollama": "llama3.2"},
-    }   
+    } 
     if not os.path.exists(CONFIG_PATH):
         return defaults
 
@@ -861,8 +864,12 @@ Generate between 3 and 5 steps. Be specific and technical.
 # Command: ask a question to the AI agent
 @cli.command()
 @click.argument("question")
-def ask(question):
+@click.option("--no-cache", is_flag=True, help="Ignore saved answers and ask the AI again.")
+def ask(question, no_cache):
     """Ask a question to the AI agent based on the Knowledge Base."""
+    if not check_ai_enabled():
+        return
+
     with open(TEST_CASES_PATH, "r") as f:
         test_cases = json.load(f)
 
@@ -889,6 +896,18 @@ TEST CASES:
 Answer the following question: {question}
 """
 
+    config = load_config()
+    _, provider, model = get_ai_settings(config)
+    cache_enabled = config.get("ai_cache_enabled", True)
+    key = make_key(provider, model, context)
+
+    if cache_enabled and not no_cache:
+        cached_answer = get_cached_answer(CACHE_PATH, key)
+        if cached_answer:
+            click.echo("\n💾 Answer from cache (use --no-cache to ask the AI again)\n")
+            click.echo(f"{cached_answer}\n")
+            return
+
     show_ai_thinking()
     try:
         answer = ask_ai(context)
@@ -899,8 +918,18 @@ Answer the following question: {question}
         click.echo(f"\n❌ Error contacting the AI provider: {e}\n")
         return
 
+    if cache_enabled:
+        save_answer(CACHE_PATH, key, answer)
+
     click.echo(f"{answer}\n")
 
+@cli.command("clear-cache")
+def clear_cache_command():
+    """Delete all saved AI answers."""
+    if clear_cache(CACHE_PATH):
+        click.echo("\n🧹 AI answer cache cleared.\n")
+    else:
+        click.echo("\nℹ️  The cache is already empty.\n")
 
 @cli.command()
 def doctor():

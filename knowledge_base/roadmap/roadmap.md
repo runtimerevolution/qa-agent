@@ -11,6 +11,7 @@ The QA team is actively working on test automation for the Team Allocator projec
 - Automate Views and Filters test cases (TC-005)
 
 ### 🟡 To Do
+- Cache test
 - Automate Absence booking test cases
 - Automate Calendar Drag & Drop test cases
 - Automate API test cases (Session Data, Bookings, Absences)
