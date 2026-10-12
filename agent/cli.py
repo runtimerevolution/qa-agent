@@ -24,7 +24,7 @@ def load_config():
         return defaults
 
     try:
-        with open(CONFIG_PATH, "r") as f:
+        with open(CONFIG_PATH, "r", encoding="utf-8") as f:
             config = json.load(f)
         return {**defaults, **config}
     except Exception:
@@ -94,7 +94,7 @@ def log_event(event_type, test_id, details):
     """Logs an event to the project history."""
     from datetime import datetime
 
-    with open(HISTORY_PATH, "r") as f:
+    with open(HISTORY_PATH, "r", encoding="utf-8") as f:
         history = json.load(f)
 
     event = {
@@ -106,7 +106,7 @@ def log_event(event_type, test_id, details):
 
     history["events"].append(event)
 
-    with open(HISTORY_PATH, "w") as f:
+    with open(HISTORY_PATH, "w", encoding="utf-8") as f:
         json.dump(history, f, indent=2, ensure_ascii=False)
 
 # Main entry point
@@ -119,7 +119,7 @@ def cli():
 @cli.command()
 def list_tests():
     """List all available test cases."""
-    with open(TEST_CASES_PATH, "r") as f:
+    with open(TEST_CASES_PATH, "r", encoding="utf-8") as f:
         data = json.load(f)
 
     click.echo("\n📋 Available test cases:\n")
@@ -132,7 +132,7 @@ def list_tests():
 @click.argument("test_id")
 def show(test_id):
     """Show details of a specific test case. Ex: python agent/cli.py show TC-001"""
-    with open(TEST_CASES_PATH, "r") as f:
+    with open(TEST_CASES_PATH, "r", encoding="utf-8") as f:
         data = json.load(f)
 
     test = next((tc for tc in data["test_cases"] if tc["id"] == test_id), None)
@@ -163,7 +163,7 @@ def update_state(test_id, new_state):
         click.echo(f"\n❌ Invalid state. Available states: {', '.join(valid_states)}\n")
         return
 
-    with open(TEST_CASES_PATH, "r") as f:
+    with open(TEST_CASES_PATH, "r", encoding="utf-8") as f:
         data = json.load(f)
 
     test = next((tc for tc in data["test_cases"] if tc["id"] == test_id), None)
@@ -175,7 +175,7 @@ def update_state(test_id, new_state):
     old_state = test["state"]
     test["state"] = new_state
 
-    with open(TEST_CASES_PATH, "w") as f:
+    with open(TEST_CASES_PATH, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2, ensure_ascii=False)
 
     log_event("state_change", test_id, f"{old_state} → {new_state}")
@@ -242,12 +242,12 @@ def add_test():
         "steps": steps
     }
 
-    with open(TEST_CASES_PATH, "r") as f:
+    with open(TEST_CASES_PATH, "r", encoding="utf-8") as f:
         data = json.load(f)
 
     data["test_cases"].append(new_test)
 
-    with open(TEST_CASES_PATH, "w") as f:
+    with open(TEST_CASES_PATH, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2, ensure_ascii=False)
 
     log_event("test_created", test_id, f"Test case '{title}' created")
@@ -259,7 +259,7 @@ def add_test():
 @click.argument("test_id")
 def update_test(test_id):
     """Update an existing test case. Ex: python agent/cli.py update-test TC-001"""
-    with open(TEST_CASES_PATH, "r") as f:
+    with open(TEST_CASES_PATH, "r", encoding="utf-8") as f:
         data = json.load(f)
 
     test = next((tc for tc in data["test_cases"] if tc["id"] == test_id), None)
@@ -297,7 +297,7 @@ def update_test(test_id):
     test["assigned_to"] = assigned_to
     test["playwright_file"] = playwright_file
 
-    with open(TEST_CASES_PATH, "w") as f:
+    with open(TEST_CASES_PATH, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2, ensure_ascii=False)
 
     log_event("test_updated", test_id, f"Test case '{test_id}' updated")
@@ -312,7 +312,7 @@ def update_test(test_id):
 @click.option("--state", "-s", default=None, help="Search by state")
 def search(keyword, assignee, area, state):
     """Search test cases by different criteria."""
-    with open(TEST_CASES_PATH, "r") as f:
+    with open(TEST_CASES_PATH, "r", encoding="utf-8") as f:
         data = json.load(f)
 
     results = data["test_cases"]
@@ -357,7 +357,7 @@ def search(keyword, assignee, area, state):
 @cli.command()
 def stats():
     """Show test cases statistics."""
-    with open(TEST_CASES_PATH, "r") as f:
+    with open(TEST_CASES_PATH, "r", encoding="utf-8") as f:
         data = json.load(f)
 
     total = len(data["test_cases"])
@@ -378,7 +378,7 @@ def stats():
 @click.argument("test_id")
 def assign(test_id):
     """Assign a test case to a team member. Ex: python agent/cli.py assign TC-001"""
-    with open(TEST_CASES_PATH, "r") as f:
+    with open(TEST_CASES_PATH, "r", encoding="utf-8") as f:
         data = json.load(f)
 
     test = next((tc for tc in data["test_cases"] if tc["id"] == test_id), None)
@@ -400,7 +400,7 @@ def assign(test_id):
     old_assignee = test["assigned_to"]
     test["assigned_to"] = new_assignee
 
-    with open(TEST_CASES_PATH, "w") as f:
+    with open(TEST_CASES_PATH, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2, ensure_ascii=False)
 
     log_event("test_assigned", test_id, f"Assigned from '{old_assignee}' to '{new_assignee}'")
@@ -412,7 +412,7 @@ def assign(test_id):
 @click.argument("test_id")
 def delete_test(test_id):
     """Delete a test case from the database. Ex: python agent/cli.py delete-test TC-001"""
-    with open(TEST_CASES_PATH, "r") as f:
+    with open(TEST_CASES_PATH, "r", encoding="utf-8") as f:
         data = json.load(f)
 
     test = next((tc for tc in data["test_cases"] if tc["id"] == test_id), None)
@@ -432,7 +432,7 @@ def delete_test(test_id):
 
     data["test_cases"] = [tc for tc in data["test_cases"] if tc["id"] != test_id]
 
-    with open(TEST_CASES_PATH, "w") as f:
+    with open(TEST_CASES_PATH, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2, ensure_ascii=False)
 
     log_event("test_deleted", test_id, f"Test case '{test['title']}' deleted")
@@ -449,7 +449,7 @@ def run_test(test_id, simulate):
     import subprocess as sp
     import time
 
-    with open(TEST_CASES_PATH, "r") as f:
+    with open(TEST_CASES_PATH, "r", encoding="utf-8") as f:
         data = json.load(f)
 
     test = next((tc for tc in data["test_cases"] if tc["id"] == test_id), None)
@@ -491,7 +491,7 @@ def run_test(test_id, simulate):
 
     test["state"] = new_state
 
-    with open(TEST_CASES_PATH, "w") as f:
+    with open(TEST_CASES_PATH, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2, ensure_ascii=False)
 
     log_event("test_run", test_id, f"Playwright test ran — result: {new_state}")
@@ -571,7 +571,7 @@ def roadmap():
     """Show the current team roadmap."""
     roadmap_path = os.path.join(BASE_DIR, "knowledge_base", "roadmap", "roadmap.md")
 
-    with open(roadmap_path, "r") as f:
+    with open(roadmap_path, "r", encoding="utf-8") as f:
         content = f.read()
 
     click.echo("\n🗺️  Team roadmap:\n")
@@ -595,13 +595,13 @@ def roadmap_add(section, item):
         click.echo(f"\n❌ Invalid section. Use: inprogress, todo, backlog\n")
         return
 
-    with open(roadmap_path, "r") as f:
+    with open(roadmap_path, "r", encoding="utf-8") as f:
         content = f.read()
 
     section_header = section_map[section]
     content = content.replace(section_header, f"{section_header}\n- {item}")
 
-    with open(roadmap_path, "w") as f:
+    with open(roadmap_path, "w", encoding="utf-8") as f:
         f.write(content)
 
     click.echo(f"\n✅ Item added to '{section}': {item}\n")
@@ -624,7 +624,7 @@ def roadmap_move(item, to_section):
         click.echo(f"\n❌ Invalid section. Use: inprogress, todo, backlog\n")
         return
 
-    with open(roadmap_path, "r") as f:
+    with open(roadmap_path, "r", encoding="utf-8") as f:
         content = f.read()
 
     if f"- {item}" not in content:
@@ -635,7 +635,7 @@ def roadmap_move(item, to_section):
     section_header = section_map[to_section]
     content = content.replace(section_header, f"{section_header}\n- {item}")
 
-    with open(roadmap_path, "w") as f:
+    with open(roadmap_path, "w", encoding="utf-8") as f:
         f.write(content)
 
     click.echo(f"\n✅ Item moved to '{to_section}': {item}\n")
@@ -647,7 +647,7 @@ def roadmap_complete(item):
     """Mark a roadmap item as completed."""
     roadmap_path = os.path.join(BASE_DIR, "knowledge_base", "roadmap", "roadmap.md")
 
-    with open(roadmap_path, "r") as f:
+    with open(roadmap_path, "r", encoding="utf-8") as f:
         content = f.read()
 
     if f"- {item}" not in content:
@@ -657,7 +657,7 @@ def roadmap_complete(item):
     content = content.replace(f"- {item}\n", "")
     content = content.replace("### ✅ Completed", f"### ✅ Completed\n- {item}")
 
-    with open(roadmap_path, "w") as f:
+    with open(roadmap_path, "w", encoding="utf-8") as f:
         f.write(content)
 
     click.echo(f"\n✅ Item marked as completed: {item}\n")
@@ -669,7 +669,7 @@ def roadmap_remove(item):
     """Remove an item from the roadmap."""
     roadmap_path = os.path.join(BASE_DIR, "knowledge_base", "roadmap", "roadmap.md")
 
-    with open(roadmap_path, "r") as f:
+    with open(roadmap_path, "r", encoding="utf-8") as f:
         content = f.read()
 
     if f"- {item}" not in content:
@@ -684,7 +684,7 @@ def roadmap_remove(item):
 
     content = content.replace(f"- {item}\n", "")
 
-    with open(roadmap_path, "w") as f:
+    with open(roadmap_path, "w", encoding="utf-8") as f:
         f.write(content)
 
     click.echo(f"\n✅ Item removed from roadmap: {item}\n")
@@ -693,7 +693,7 @@ def roadmap_remove(item):
 @cli.command()
 def history():
     """Show the project change history."""
-    with open(HISTORY_PATH, "r") as f:
+    with open(HISTORY_PATH, "r", encoding="utf-8") as f:
         data = json.load(f)
 
     if not data["events"]:
@@ -709,7 +709,7 @@ def history():
 @cli.command()
 def export_history():
     """Export the project history to a Markdown file."""
-    with open(HISTORY_PATH, "r") as f:
+    with open(HISTORY_PATH, "r", encoding="utf-8") as f:
         data = json.load(f)
 
     if not data["events"]:
@@ -718,7 +718,7 @@ def export_history():
 
     export_path = os.path.join(BASE_DIR, "knowledge_base", "history.md")
 
-    with open(export_path, "w") as f:
+    with open(export_path, "w", encoding="utf-8") as f:
         f.write("# Project Change History\n\n")
 
         current_date = None
@@ -737,7 +737,7 @@ def export_history():
 @cli.command()
 def export_tests_history():
     """Export the list of created test cases to a Markdown file."""
-    with open(TEST_CASES_PATH, "r") as f:
+    with open(TEST_CASES_PATH, "r", encoding="utf-8") as f:
         data = json.load(f)
 
     if not data["test_cases"]:
@@ -746,7 +746,7 @@ def export_tests_history():
 
     export_path = os.path.join(BASE_DIR, "knowledge_base", "test_cases_history.md")
 
-    with open(export_path, "w") as f:
+    with open(export_path, "w", encoding="utf-8") as f:
         f.write("# Test Cases History\n\n")
         f.write(f"Project: {data['project']}\n")
         f.write(f"Last updated: {data['last_updated']}\n\n")
@@ -834,7 +834,7 @@ Generate between 3 and 5 steps. Be specific and technical.
         click.echo("\n❌ Test case not saved.\n")
         return
 
-    with open(TEST_CASES_PATH, "r") as f:
+    with open(TEST_CASES_PATH, "r", encoding="utf-8") as f:
         data = json.load(f)
 
     existing_ids = [tc["id"] for tc in data["test_cases"]]
@@ -854,7 +854,7 @@ Generate between 3 and 5 steps. Be specific and technical.
 
     data["test_cases"].append(new_test)
 
-    with open(TEST_CASES_PATH, "w") as f:
+    with open(TEST_CASES_PATH, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2, ensure_ascii=False)
 
     log_event("test_created", next_id, f"Test case '{generated['title']}' generated by AI")
@@ -870,15 +870,15 @@ def ask(question, no_cache):
     if not check_ai_enabled():
         return
 
-    with open(TEST_CASES_PATH, "r") as f:
+    with open(TEST_CASES_PATH, "r", encoding="utf-8") as f:
         test_cases = json.load(f)
 
     roadmap_path = os.path.join(BASE_DIR, "knowledge_base", "roadmap", "roadmap.md")
-    with open(roadmap_path, "r") as f:
+    with open(roadmap_path, "r", encoding="utf-8") as f:
         roadmap = f.read()
 
     guidelines_path = os.path.join(BASE_DIR, "knowledge_base", "guidelines", "guidelines.md")
-    with open(guidelines_path, "r") as f:
+    with open(guidelines_path, "r", encoding="utf-8") as f:
         guidelines = f.read()
 
     context = f"""
