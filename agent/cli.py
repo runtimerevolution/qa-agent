@@ -142,6 +142,29 @@ def filter_test_cases(test_cases, keyword=None, assignee=None, area=None, state=
 
     return results
 
+def execute_test(test, simulate=False):
+    """Runs the Playwright test linked to a test case. Returns 'Passed' or 'Failed'."""
+    import subprocess as sp
+    import sys
+    import time
+
+    playwright_file = test["playwright_file"]
+
+    if simulate:
+        click.echo(f"   📄 Test file: {playwright_file}")
+        click.echo(f"   🌐 Browser: Chromium")
+        click.echo(f"   ⏳ Running steps:\n")
+        for step in test["steps"]:
+            click.echo(f"      Step {step['step']}: {step['action']}")
+            time.sleep(0.5)
+            click.echo(f"      ✅ {step['expected']}\n")
+        return "Passed"
+
+    result = sp.run(
+        [sys.executable, "-m", "pytest", playwright_file, "-v"],
+        capture_output=False
+    )
+    return "Passed" if result.returncode == 0 else "Failed"
 
 # Main entry point
 @click.group()
@@ -453,9 +476,6 @@ def delete_test(test_id):
 @click.option("--simulate", is_flag=True, default=False, help="Simulate test run without browser")
 def run_test(test_id, simulate):
     """Run a Playwright test for a specific test case. Ex: python agent/cli.py run-test TC-001"""
-    import subprocess as sp
-    import time
-
     with open(TEST_CASES_PATH, "r", encoding="utf-8") as f:
         data = json.load(f)
 
@@ -465,36 +485,19 @@ def run_test(test_id, simulate):
         click.echo(f"\n❌ Test case '{test_id}' not found.\n")
         return
 
-    playwright_file = test.get("playwright_file")
-
-    if not playwright_file:
+    if not test.get("playwright_file"):
         click.echo(f"\n❌ No Playwright test linked to '{test_id}'.\n")
         click.echo(f"   Add a 'playwright_file' field to the test case in test_cases.json.\n")
         return
 
     click.echo(f"\n🎭 Running Playwright test for '{test_id}' — {test['title']}\n")
 
-    if simulate:
-        click.echo(f"   📄 Test file: {playwright_file}")
-        click.echo(f"   🌐 Browser: Chromium")
-        click.echo(f"   ⏳ Running steps:\n")
-        for step in test["steps"]:
-            click.echo(f"      Step {step['step']}: {step['action']}")
-            time.sleep(0.5)
-            click.echo(f"      ✅ {step['expected']}\n")
-        new_state = "Passed"
+    new_state = execute_test(test, simulate)
+
+    if new_state == "Passed":
         click.echo(f"\n✅ Test passed!\n")
     else:
-        result = sp.run(
-            ["python", "-m", "pytest", playwright_file, "-v"],
-            capture_output=False
-        )
-        if result.returncode == 0:
-            new_state = "Passed"
-            click.echo(f"\n✅ Test passed!\n")
-        else:
-            new_state = "Failed"
-            click.echo(f"\n❌ Test failed!\n")
+        click.echo(f"\n❌ Test failed!\n")
 
     test["state"] = new_state
 
@@ -504,7 +507,7 @@ def run_test(test_id, simulate):
     log_event("test_run", test_id, f"Playwright test ran — result: {new_state}")
 
     click.echo(f"📝 State updated to '{new_state}' automatically.\n")
-
+    
 # Command: search pull requests
 @cli.command()
 @click.option("--title", "-t", default=None, help="Search by title")
