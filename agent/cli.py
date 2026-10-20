@@ -109,6 +109,40 @@ def log_event(event_type, test_id, details):
     with open(HISTORY_PATH, "w", encoding="utf-8") as f:
         json.dump(history, f, indent=2, ensure_ascii=False)
 
+def filter_test_cases(test_cases, keyword=None, assignee=None, area=None, state=None):
+    """Returns the test cases that match all the given filters."""
+    results = test_cases
+
+    if keyword:
+        keyword_lower = keyword.lower()
+        results = [
+            tc for tc in results
+            if keyword_lower in tc["title"].lower()
+            or keyword_lower in tc["area_path"].lower()
+            or keyword_lower in tc["assigned_to"].lower()
+        ]
+
+    if assignee:
+        results = [
+            tc for tc in results
+            if assignee.lower() in tc["assigned_to"].lower()
+        ]
+
+    if area:
+        results = [
+            tc for tc in results
+            if area.lower() in tc["area_path"].lower()
+        ]
+
+    if state:
+        results = [
+            tc for tc in results
+            if state.lower() == tc["state"].lower()
+        ]
+
+    return results
+
+
 # Main entry point
 @click.group()
 def cli():
@@ -315,34 +349,7 @@ def search(keyword, assignee, area, state):
     with open(TEST_CASES_PATH, "r", encoding="utf-8") as f:
         data = json.load(f)
 
-    results = data["test_cases"]
-
-    if keyword:
-        keyword_lower = keyword.lower()
-        results = [
-            tc for tc in results
-            if keyword_lower in tc["title"].lower()
-            or keyword_lower in tc["area_path"].lower()
-            or keyword_lower in tc["assigned_to"].lower()
-        ]
-
-    if assignee:
-        results = [
-            tc for tc in results
-            if assignee.lower() in tc["assigned_to"].lower()
-        ]
-
-    if area:
-        results = [
-            tc for tc in results
-            if area.lower() in tc["area_path"].lower()
-        ]
-
-    if state:
-        results = [
-            tc for tc in results
-            if state.lower() == tc["state"].lower()
-        ]
+    results = filter_test_cases(data["test_cases"], keyword, assignee, area, state)
 
     if not results:
         click.echo(f"\n❌ No test cases found.\n")
