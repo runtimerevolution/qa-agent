@@ -179,7 +179,7 @@ def create_pull_request(platform="GitHub"):
 
     template_path = ".github/pull_request_template.md"
     if os.path.exists(template_path):
-        with open(template_path, "r") as f:
+        with open(template_path, "r", encoding="utf-8") as f:
             template = f.read()
     else:
         template = "## Description\n\n## How to Test\n\n## Checklist\n"
