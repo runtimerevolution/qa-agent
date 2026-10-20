@@ -3,9 +3,12 @@ import subprocess
 import sys
 import os
 
+# Project root folder (one level above the agent folder)
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
 def run_command(command):
     """Runs a CLI command."""
-    subprocess.run([sys.executable, "agent/cli.py"] + command)
+    subprocess.run([sys.executable, "-m", "agent.cli"] + command, cwd=BASE_DIR)
 
 def wait_for_menu():
     """Waits for the user to press Enter before returning to the menu."""
