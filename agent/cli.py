@@ -507,7 +507,75 @@ def run_test(test_id, simulate):
     log_event("test_run", test_id, f"Playwright test ran — result: {new_state}")
 
     click.echo(f"📝 State updated to '{new_state}' automatically.\n")
-    
+
+@cli.command()
+@click.option("--keyword", "-k", default=None, help="Run tests matching a keyword")
+@click.option("--assignee", "-a", default=None, help="Run tests assigned to someone")
+@click.option("--area", "-ar", default=None, help="Run tests from an area")
+@click.option("--state", "-s", default=None, help="Run tests with a given state (e.g. Failed)")
+@click.option("--simulate", is_flag=True, default=False, help="Simulate test runs without browser")
+def run_tests(keyword, assignee, area, state, simulate):
+    """Run the Playwright tests of all test cases that match the filters. Ex: run-tests --state Failed"""
+    with open(TEST_CASES_PATH, "r", encoding="utf-8") as f:
+        data = json.load(f)
+
+    matches = filter_test_cases(data["test_cases"], keyword, assignee, area, state)
+
+    if not matches:
+        click.echo("\n❌ No test cases found with these filters.\n")
+        return
+
+    to_run = [tc for tc in matches if tc.get("playwright_file")]
+    skipped = [tc for tc in matches if not tc.get("playwright_file")]
+
+    click.echo(f"\n🎭 Tests to run ({len(to_run)}):\n")
+    for tc in to_run:
+        click.echo(f"  {tc['id']} | {tc['title']}")
+
+    if skipped:
+        click.echo(f"\n⏭️  Skipped, no Playwright test linked ({len(skipped)}):\n")
+        for tc in skipped:
+            click.echo(f"  {tc['id']} | {tc['title']}")
+
+    if not to_run:
+        click.echo("\n❌ None of these test cases has a Playwright test to run.\n")
+        return
+
+    no_filters = not any([keyword, assignee, area, state])
+    if no_filters:
+        confirm = click.confirm("\n   ⚠️  No filters given. Run ALL tests?", default=False)
+    else:
+        confirm = click.confirm("\n   Run these tests?", default=True)
+
+    if not confirm:
+        click.echo("\n❌ Test run cancelled.\n")
+        return
+
+    results = {"Passed": [], "Failed": []}
+
+    for number, tc in enumerate(to_run, start=1):
+        click.echo(f"\n[{number}/{len(to_run)}] 🎭 {tc['id']} — {tc['title']}\n")
+        new_state = execute_test(tc, simulate)
+        tc["state"] = new_state
+        results[new_state].append(tc)
+        log_event("test_run", tc["id"], f"Playwright test ran — result: {new_state}")
+
+    with open(TEST_CASES_PATH, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=2, ensure_ascii=False)
+
+    click.echo("\n📊 Summary\n")
+    click.echo(f"  ✅ Passed:  {len(results['Passed'])}")
+    click.echo(f"  ❌ Failed:  {len(results['Failed'])}")
+    click.echo(f"  ⏭️  Skipped: {len(skipped)}")
+
+    if results["Failed"]:
+        click.echo("\n❌ Failed tests:\n")
+        for tc in results["Failed"]:
+            click.echo(f"  {tc['id']} | {tc['title']}")
+        click.echo("\n💡 To run only the failed tests again: run-tests --state Failed")
+
+    click.echo(f"\n📝 States updated automatically.\n")
+
 # Command: search pull requests
 @cli.command()
 @click.option("--title", "-t", default=None, help="Search by title")
