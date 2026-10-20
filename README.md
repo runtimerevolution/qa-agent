@@ -146,7 +146,7 @@ Navigate with the **arrow keys** and press **Enter** to select an option.
 
 | Menu | Options |
 |------|---------|
-| 📋 **Test Cases** | View, search, create, generate with AI, update, assign, run Playwright test, delete, stats, export history |
+| 📋 **Test Cases** | View, search, create, generate with AI, update, assign, run one Playwright test, run multiple tests, delete, stats, export history |
 | 🗺️ **Roadmap** | View, add item, move item, mark as completed, remove item |
 | 📜 **History** | View history, export history |
 | 🤖 **Ask AI** | Ask a question, ask again (ignoring saved answers), clear saved answers |
@@ -230,10 +230,33 @@ Every change to a test case is recorded automatically.
 
 | Command | What it does |
 |---------|--------------|
-| `run-test TC-001` | Runs the Playwright test linked to a test case and updates its state |
-| `run-test TC-001 --simulate` | Simulates the run without opening a browser (demo mode) |
+| `run-test TC-001` | Runs the Playwright test linked to one test case and updates its state |
+| `run-tests` | Runs the Playwright tests of all test cases that match the filters (see below) |
 
-The test case needs a `playwright_file` linked to it. You can add one with `update-test`.
+Add `--simulate` to any of them to simulate the run without opening a browser (demo mode).
+
+A test case needs a `playwright_file` linked to it to be run. You can add one with `update-test`.
+
+**Running multiple tests**
+
+`run-tests` uses the same filters as `search`, and they can be combined:
+
+```bash
+python -m agent.cli run-tests --state Failed          # run the tests that failed again
+python -m agent.cli run-tests --area Project/Login    # run all tests from an area
+python -m agent.cli run-tests --assignee Diogo        # run all tests assigned to someone
+python -m agent.cli run-tests --keyword checkout      # run all tests matching a keyword
+python -m agent.cli run-tests --area Login --state Failed
+```
+
+Before running, it shows which tests will run and which will be skipped because they have no Playwright test linked, and asks for confirmation. Without filters, it runs **all** tests, and the confirmation defaults to "no". At the end, it shows a summary and updates the state of each test case.
+
+In the menu: **📋 Test Cases → 🧪 Run Multiple Tests**.
+
+**Technical notes**
+
+- The filters live in `filter_test_cases()` and the test execution in `execute_test()`, both in `agent/cli.py`. They are shared by `search`, `run-test` and `run-tests`.
+- Tests run one at a time, so the result of each test case is known. Each run calls pytest with `sys.executable`, so the Python from the virtual environment is always used.
 
 ### 🔀 Pull Requests
 
@@ -449,7 +472,10 @@ qa-agent/
 ---
 
 ## Changelog
-
+- **2026-10-20** (later)
+  - New `run-tests` command to run several tests at once, using filters
+  - New **🧪 Run Multiple Tests** option in the Test Cases menu
+  - `run-test` now always uses the Python from the virtual environment
 - **2026-10-20**
   - New `doctor` command to check the installation
   - AI can be turned on or off, and each provider has its own model
