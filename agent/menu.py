@@ -50,6 +50,7 @@ def test_cases_menu():
                 "✏️  Update Test Case",
                 "👤 Assign Test Case",
                 "🎭 Run Playwright Test",
+                "🧪 Run Multiple Tests",
                 "🗑️  Delete Test Case",
                 "📊 Stats",
                 "📤 Export Test Cases History",
@@ -126,6 +127,61 @@ def test_cases_menu():
             else:
                 run_command(["run-test", test_id])
             wait_for_menu()
+        
+        elif choice == "🧪 Run Multiple Tests":
+            run_by = questionary.select(
+                "Which tests do you want to run?",
+                choices=[
+                    "❌ Failed tests",
+                    "📁 By area",
+                    "👤 By assignee",
+                    "🔤 By keyword",
+                    "🌐 All tests",
+                    "⬅️  Back"
+                ]
+            ).ask()
+
+            if run_by is None or run_by == "⬅️  Back":
+                continue
+
+            filters = []
+            if run_by == "❌ Failed tests":
+                filters = ["--state", "Failed"]
+            elif run_by == "📁 By area":
+                value = questionary.text("Area:").ask()
+                if not value:
+                    continue
+                filters = ["--area", value]
+            elif run_by == "👤 By assignee":
+                value = questionary.text("Assignee name:").ask()
+                if not value:
+                    continue
+                filters = ["--assignee", value]
+            elif run_by == "🔤 By keyword":
+                value = questionary.text("Keyword:").ask()
+                if not value:
+                    continue
+                filters = ["--keyword", value]
+
+            mode = questionary.select(
+                "Run mode:",
+                choices=[
+                    "🌐 Real (requires Playwright installed)",
+                    "🎭 Simulate (demo mode)"
+                ]
+            ).ask()
+
+            if mode is None:
+                continue
+
+            command = ["run-tests"] + filters
+            if mode == "🎭 Simulate (demo mode)":
+                command.append("--simulate")
+
+            run_command(command)
+            wait_for_menu()
+
+
             
         elif choice == "🗑️  Delete Test Case":
             test_id = questionary.text("Test Case ID (e.g. TC-001):").ask()
