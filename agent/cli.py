@@ -109,9 +109,13 @@ def log_event(event_type, test_id, details):
     with open(HISTORY_PATH, "w", encoding="utf-8") as f:
         json.dump(history, f, indent=2, ensure_ascii=False)
 
-def filter_test_cases(test_cases, keyword=None, assignee=None, area=None, state=None):
+def filter_test_cases(test_cases, keyword=None, assignee=None, area=None, state=None, ids=None):
     """Returns the test cases that match all the given filters."""
     results = test_cases
+
+    if ids:
+        wanted = {test_id.upper() for test_id in ids}
+        results = [tc for tc in results if tc["id"].upper() in wanted]
 
     if keyword:
         keyword_lower = keyword.lower()
@@ -514,12 +518,19 @@ def run_test(test_id, simulate):
 @click.option("--area", "-ar", default=None, help="Run tests from an area")
 @click.option("--state", "-s", default=None, help="Run tests with a given state (e.g. Failed)")
 @click.option("--simulate", is_flag=True, default=False, help="Simulate test runs without browser")
-def run_tests(keyword, assignee, area, state, simulate):
+@click.option("--id", "ids", multiple=True, help="Run a specific test case (can be repeated)")
+def run_tests(keyword, assignee, area, state, ids, simulate):
     """Run the Playwright tests of all test cases that match the filters. Ex: run-tests --state Failed"""
     with open(TEST_CASES_PATH, "r", encoding="utf-8") as f:
         data = json.load(f)
 
-    matches = filter_test_cases(data["test_cases"], keyword, assignee, area, state)
+    matches = filter_test_cases(data["test_cases"], keyword, assignee, area, state, ids)
+
+    if ids:
+        found = {tc["id"].upper() for tc in matches}
+        missing = [test_id for test_id in ids if test_id.upper() not in found]
+        if missing:
+            click.echo(f"\n⚠️  Test cases not found: {', '.join(missing)}")
 
     if not matches:
         click.echo("\n❌ No test cases found with these filters.\n")
@@ -541,7 +552,7 @@ def run_tests(keyword, assignee, area, state, simulate):
         click.echo("\n❌ None of these test cases has a Playwright test to run.\n")
         return
 
-    no_filters = not any([keyword, assignee, area, state])
+    no_filters = not any([keyword, assignee, area, state, ids])
     if no_filters:
         confirm = click.confirm("\n   ⚠️  No filters given. Run ALL tests?", default=False)
     else:
