@@ -194,8 +194,8 @@ def list_tests(as_json):
             }
             for tc in data["test_cases"]
         ]
-        click.echo(json.dumps(summary, ensure_ascii=False))
-        return
+    click.echo(json.dumps(summary))
+    return
 
     click.echo("\n📋 Available test cases:\n")
     for tc in data["test_cases"]:
