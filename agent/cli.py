@@ -178,10 +178,24 @@ def cli():
 
 # Command: list all test cases
 @cli.command()
-def list_tests():
+@click.option("--json", "as_json", is_flag=True, help="Show the test cases as JSON (used by the menu)")
+def list_tests(as_json):
     """List all available test cases."""
     with open(TEST_CASES_PATH, "r", encoding="utf-8") as f:
         data = json.load(f)
+
+    if as_json:
+        summary = [
+            {
+                "id": tc["id"],
+                "title": tc["title"],
+                "state": tc["state"],
+                "has_playwright": bool(tc.get("playwright_file")),
+            }
+            for tc in data["test_cases"]
+        ]
+        click.echo(json.dumps(summary, ensure_ascii=False))
+        return
 
     click.echo("\n📋 Available test cases:\n")
     for tc in data["test_cases"]:
