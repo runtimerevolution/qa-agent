@@ -1,7 +1,9 @@
+import json
 import questionary
 import subprocess
 import sys
 import os
+
 
 # Project root folder (one level above the agent folder)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -9,6 +11,23 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 def run_command(command):
     """Runs a CLI command."""
     subprocess.run([sys.executable, "-m", "agent.cli"] + command, cwd=BASE_DIR)
+
+def get_test_cases():
+    """Returns the list of test cases from the CLI, or an empty list if it fails."""
+    result = subprocess.run(
+        [sys.executable, "-m", "agent.cli", "list-tests", "--json"],
+        capture_output=True,
+        text=True,
+        cwd=BASE_DIR
+    )
+
+    if result.returncode != 0:
+        return []
+
+    try:
+        return json.loads(result.stdout)
+    except json.JSONDecodeError:
+        return []
 
 def wait_for_menu():
     """Waits for the user to press Enter before returning to the menu."""
@@ -131,8 +150,9 @@ def test_cases_menu():
         elif choice == "🧪 Run Multiple Tests":
             run_by = questionary.select(
                 "Which tests do you want to run?",
-                choices=[
+                                choices=[
                     "❌ Failed tests",
+                    "☑️  Choose from a list",
                     "📁 By area",
                     "👤 By assignee",
                     "🔤 By keyword",
@@ -147,6 +167,38 @@ def test_cases_menu():
             filters = []
             if run_by == "❌ Failed tests":
                 filters = ["--state", "Failed"]
+            elif run_by == "☑️  Choose from a list":
+                test_cases = get_test_cases()
+
+                if not test_cases:
+                    print("\n❌ Could not load the test cases.\n")
+                    wait_for_menu()
+                    continue
+
+                if not any(tc["has_playwright"] for tc in test_cases):
+                    print("\n❌ None of the test cases has a Playwright test linked.\n")
+                    wait_for_menu()
+                    continue
+
+                choices = [
+                    questionary.Choice(
+                        title=f"{tc['id']} | {tc['title']}",
+                        value=tc["id"],
+                        disabled=None if tc["has_playwright"] else "no Playwright test"
+                    )
+                    for tc in test_cases
+                ]
+
+                selected = questionary.checkbox(
+                    "Select the tests to run (Space to select, Enter to confirm):",
+                    choices=choices
+                ).ask()
+
+                if not selected:
+                    continue
+
+                for test_id in selected:
+                    filters += ["--id", test_id]
             elif run_by == "📁 By area":
                 value = questionary.text("Area:").ask()
                 if not value:

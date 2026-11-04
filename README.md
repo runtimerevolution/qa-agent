@@ -184,7 +184,7 @@ python -m agent.cli --help
 
 | Command | What it does |
 |---------|--------------|
-| `list-tests` | Lists all test cases |
+| `list-tests` | Lists all test cases. Add `--json` for a machine-readable list (used by the menu) |
 | `show TC-001` | Shows the details and steps of a test case |
 | `add-test` | Adds a new test case, step by step |
 | `update-test TC-001` | Updates the title, area, assignee or Playwright file of a test case |
@@ -203,6 +203,7 @@ python -m agent.cli search --keyword login
 python -m agent.cli search --assignee Diogo
 python -m agent.cli search --area Project/Login
 python -m agent.cli search --state Failed
+python -m agent.cli run-tests --id TC-001 --id TC-003  # run specific test cases
 ```
 
 ### 🗺️ Roadmap
@@ -251,7 +252,7 @@ python -m agent.cli run-tests --area Login --state Failed
 
 Before running, it shows which tests will run and which will be skipped because they have no Playwright test linked, and asks for confirmation. Without filters, it runs **all** tests, and the confirmation defaults to "no". At the end, it shows a summary and updates the state of each test case.
 
-In the menu: **📋 Test Cases → 🧪 Run Multiple Tests**.
+In the menu: **📋 Test Cases → 🧪 Run Multiple Tests**. Choose **☑️ Choose from a list** to pick the tests one by one. Test cases without a Playwright test are shown but cannot be selected.
 
 **Technical notes**
 
@@ -472,7 +473,11 @@ qa-agent/
 ---
 
 ## Changelog
-- **2026-10-20** (later)
+- **2026-10-26**
+  - `run-tests` can run specific test cases with `--id`
+  - New **☑️ Choose from a list** option in **🧪 Run Multiple Tests**
+  - `list-tests --json` returns the test cases in JSON
+- **2026-10-20** 
   - New `run-tests` command to run several tests at once, using filters
   - New **🧪 Run Multiple Tests** option in the Test Cases menu
   - `run-test` now always uses the Python from the virtual environment
