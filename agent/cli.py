@@ -625,9 +625,14 @@ def run_tests(keyword, assignee, area, state, ids, simulate):
     click.echo(f"\n📝 States updated automatically.\n")
 
 @cli.command()
-def suites():
+@click.option("--json", "as_json", is_flag=True, help="Show the suites as JSON (used by the menu)")
+def suites(as_json):
     """List the saved test suites."""
     saved = load_suites()
+
+    if as_json:
+        click.echo(json.dumps(saved))
+        return
 
     if not saved:
         click.echo("\n📦 No suites saved yet.\n")
@@ -639,7 +644,6 @@ def suites():
         description = suite.get("description", "")
         click.echo(f"  {name} ({count} tests) — {description}")
     click.echo("")
-
 
 @cli.command()
 @click.argument("name")
@@ -726,8 +730,7 @@ def suite_delete(name):
     save_suites(saved)
 
     click.echo(f"\n✅ Suite '{name}' deleted.\n")
-    
-        
+ 
 # Command: search pull requests
 @cli.command()
 @click.option("--title", "-t", default=None, help="Search by title")
