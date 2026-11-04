@@ -665,6 +665,69 @@ def run_suite(ctx, name, simulate):
     click.echo(f"\n📦 Suite: {name} — {suite.get('description', '')}")
     ctx.invoke(run_tests, ids=tuple(test_ids), simulate=simulate)
 
+@cli.command()
+@click.argument("name")
+@click.option("--id", "ids", multiple=True, required=True, help="Test case to include (repeat for each one)")
+@click.option("--description", "-d", default="", help="Short description of the suite")
+def suite_save(name, ids, description):
+    """Create or replace a test suite. Ex: suite-save smoke --id TC-001 --id TC-002"""
+    name = name.strip().lower().replace(" ", "-")
+
+    with open(TEST_CASES_PATH, "r", encoding="utf-8") as f:
+        data = json.load(f)
+
+    existing = {tc["id"].upper(): tc["id"] for tc in data["test_cases"]}
+    unknown = [test_id for test_id in ids if test_id.upper() not in existing]
+
+    if unknown:
+        click.echo(f"\n❌ Test cases not found: {', '.join(unknown)}. Suite not saved.\n")
+        return
+
+    test_ids = []
+    for test_id in ids:
+        real_id = existing[test_id.upper()]
+        if real_id not in test_ids:
+            test_ids.append(real_id)
+
+    saved = load_suites()
+
+    if name in saved:
+        replace = click.confirm(f"\n   Suite '{name}' already exists. Replace it?", default=False)
+        if not replace:
+            click.echo("\n❌ Suite not saved.\n")
+            return
+
+    saved[name] = {"description": description, "test_ids": test_ids}
+    save_suites(saved)
+
+    click.echo(f"\n✅ Suite '{name}' saved with {len(test_ids)} test(s).\n")
+
+@cli.command()
+@click.argument("name")
+def suite_delete(name):
+    """Delete a saved test suite. Ex: suite-delete smoke"""
+    name = name.strip().lower().replace(" ", "-")
+    saved = load_suites()
+
+    if name not in saved:
+        available = ", ".join(saved) if saved else "none yet"
+        click.echo(f"\n❌ Suite '{name}' not found. Available suites: {available}\n")
+        return
+
+    confirm = click.confirm(
+        f"\n   Delete suite '{name}'? (the test cases themselves are not deleted)",
+        default=False
+    )
+    if not confirm:
+        click.echo("\n❌ Suite not deleted.\n")
+        return
+
+    del saved[name]
+    save_suites(saved)
+
+    click.echo(f"\n✅ Suite '{name}' deleted.\n")
+    
+        
 # Command: search pull requests
 @cli.command()
 @click.option("--title", "-t", default=None, help="Search by title")
