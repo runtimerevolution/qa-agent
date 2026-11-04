@@ -1,0 +1,8 @@
+{
+  "suites": {
+    "smoke": {
+      "description": "Most important tests, run before every release",
+      "test_ids": ["TC-001", "TC-002"]
+    }
+  }
+}

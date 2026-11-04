@@ -8,6 +8,7 @@ from agent.ai_cache import make_key, get_cached_answer, save_answer, clear_cache
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TEST_CASES_PATH = os.path.join(BASE_DIR, "knowledge_base", "test_cases", "test_cases.json")
 HISTORY_PATH = os.path.join(BASE_DIR, "knowledge_base", "history.json")
+SUITES_PATH = os.path.join(BASE_DIR, "knowledge_base", "suites", "suites.json")
 
 CONFIG_PATH = os.path.join(BASE_DIR, "config.json")
 CACHE_PATH = os.path.join(os.path.dirname(CONFIG_PATH), ".ai_cache.json")
@@ -165,6 +166,28 @@ def execute_test(test, simulate=False):
         capture_output=False
     )
     return "Passed" if result.returncode == 0 else "Failed"
+
+def load_suites():
+    """Returns the saved test suites, or an empty set of suites if there are none yet."""
+    if not os.path.exists(SUITES_PATH):
+        return {}
+
+    try:
+        with open(SUITES_PATH, "r", encoding="utf-8") as f:
+            return json.load(f).get("suites", {})
+    except json.JSONDecodeError as e:
+        raise click.ClickException(
+            f"suites.json has a formatting error (line {e.lineno}). Fix it and try again."
+        )
+
+
+def save_suites(suites):
+    """Saves the test suites to the suites file."""
+    os.makedirs(os.path.dirname(SUITES_PATH), exist_ok=True)
+
+    with open(SUITES_PATH, "w", encoding="utf-8") as f:
+        json.dump({"suites": suites}, f, indent=2, ensure_ascii=False)
+
 
 # Main entry point
 @click.group()
@@ -575,6 +598,22 @@ def run_tests(keyword, assignee, area, state, simulate):
         click.echo("\n💡 To run only the failed tests again: run-tests --state Failed")
 
     click.echo(f"\n📝 States updated automatically.\n")
+
+@cli.command()
+def suites():
+    """List the saved test suites."""
+    saved = load_suites()
+
+    if not saved:
+        click.echo("\n📦 No suites saved yet.\n")
+        return
+
+    click.echo("\n📦 Saved suites:\n")
+    for name, suite in saved.items():
+        count = len(suite.get("test_ids", []))
+        description = suite.get("description", "")
+        click.echo(f"  {name} ({count} tests) — {description}")
+    click.echo("")
 
 # Command: search pull requests
 @cli.command()
