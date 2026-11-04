@@ -8,6 +8,7 @@ from agent.ai_cache import make_key, get_cached_answer, save_answer, clear_cache
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TEST_CASES_PATH = os.path.join(BASE_DIR, "knowledge_base", "test_cases", "test_cases.json")
 HISTORY_PATH = os.path.join(BASE_DIR, "knowledge_base", "history.json")
+SUITES_PATH = os.path.join(BASE_DIR, "knowledge_base", "suites", "suites.json")
 
 CONFIG_PATH = os.path.join(BASE_DIR, "config.json")
 CACHE_PATH = os.path.join(os.path.dirname(CONFIG_PATH), ".ai_cache.json")
@@ -169,6 +170,28 @@ def execute_test(test, simulate=False):
         capture_output=False
     )
     return "Passed" if result.returncode == 0 else "Failed"
+
+def load_suites():
+    """Returns the saved test suites, or an empty set of suites if there are none yet."""
+    if not os.path.exists(SUITES_PATH):
+        return {}
+
+    try:
+        with open(SUITES_PATH, "r", encoding="utf-8") as f:
+            return json.load(f).get("suites", {})
+    except json.JSONDecodeError as e:
+        raise click.ClickException(
+            f"suites.json has a formatting error (line {e.lineno}). Fix it and try again."
+        )
+
+
+def save_suites(suites):
+    """Saves the test suites to the suites file."""
+    os.makedirs(os.path.dirname(SUITES_PATH), exist_ok=True)
+
+    with open(SUITES_PATH, "w", encoding="utf-8") as f:
+        json.dump({"suites": suites}, f, indent=2, ensure_ascii=False)
+
 
 # Main entry point
 @click.group()
@@ -601,6 +624,113 @@ def run_tests(keyword, assignee, area, state, ids, simulate):
 
     click.echo(f"\n📝 States updated automatically.\n")
 
+@cli.command()
+@click.option("--json", "as_json", is_flag=True, help="Show the suites as JSON (used by the menu)")
+def suites(as_json):
+    """List the saved test suites."""
+    saved = load_suites()
+
+    if as_json:
+        click.echo(json.dumps(saved))
+        return
+
+    if not saved:
+        click.echo("\n📦 No suites saved yet.\n")
+        return
+
+    click.echo("\n📦 Saved suites:\n")
+    for name, suite in saved.items():
+        count = len(suite.get("test_ids", []))
+        description = suite.get("description", "")
+        click.echo(f"  {name} ({count} tests) — {description}")
+    click.echo("")
+
+@cli.command()
+@click.argument("name")
+@click.option("--simulate", is_flag=True, default=False, help="Simulate test runs without browser")
+@click.pass_context
+def run_suite(ctx, name, simulate):
+    """Run all the tests in a saved suite. Ex: run-suite smoke"""
+    name = name.lower()
+    saved = load_suites()
+
+    if name not in saved:
+        available = ", ".join(saved) if saved else "none yet"
+        click.echo(f"\n❌ Suite '{name}' not found. Available suites: {available}\n")
+        return
+
+    suite = saved[name]
+    test_ids = suite.get("test_ids", [])
+
+    if not test_ids:
+        click.echo(f"\n❌ Suite '{name}' has no tests.\n")
+        return
+
+    click.echo(f"\n📦 Suite: {name} — {suite.get('description', '')}")
+    ctx.invoke(run_tests, ids=tuple(test_ids), simulate=simulate)
+
+@cli.command()
+@click.argument("name")
+@click.option("--id", "ids", multiple=True, required=True, help="Test case to include (repeat for each one)")
+@click.option("--description", "-d", default="", help="Short description of the suite")
+def suite_save(name, ids, description):
+    """Create or replace a test suite. Ex: suite-save smoke --id TC-001 --id TC-002"""
+    name = name.strip().lower().replace(" ", "-")
+
+    with open(TEST_CASES_PATH, "r", encoding="utf-8") as f:
+        data = json.load(f)
+
+    existing = {tc["id"].upper(): tc["id"] for tc in data["test_cases"]}
+    unknown = [test_id for test_id in ids if test_id.upper() not in existing]
+
+    if unknown:
+        click.echo(f"\n❌ Test cases not found: {', '.join(unknown)}. Suite not saved.\n")
+        return
+
+    test_ids = []
+    for test_id in ids:
+        real_id = existing[test_id.upper()]
+        if real_id not in test_ids:
+            test_ids.append(real_id)
+
+    saved = load_suites()
+
+    if name in saved:
+        replace = click.confirm(f"\n   Suite '{name}' already exists. Replace it?", default=False)
+        if not replace:
+            click.echo("\n❌ Suite not saved.\n")
+            return
+
+    saved[name] = {"description": description, "test_ids": test_ids}
+    save_suites(saved)
+
+    click.echo(f"\n✅ Suite '{name}' saved with {len(test_ids)} test(s).\n")
+
+@cli.command()
+@click.argument("name")
+def suite_delete(name):
+    """Delete a saved test suite. Ex: suite-delete smoke"""
+    name = name.strip().lower().replace(" ", "-")
+    saved = load_suites()
+
+    if name not in saved:
+        available = ", ".join(saved) if saved else "none yet"
+        click.echo(f"\n❌ Suite '{name}' not found. Available suites: {available}\n")
+        return
+
+    confirm = click.confirm(
+        f"\n   Delete suite '{name}'? (the test cases themselves are not deleted)",
+        default=False
+    )
+    if not confirm:
+        click.echo("\n❌ Suite not deleted.\n")
+        return
+
+    del saved[name]
+    save_suites(saved)
+
+    click.echo(f"\n✅ Suite '{name}' deleted.\n")
+ 
 # Command: search pull requests
 @cli.command()
 @click.option("--title", "-t", default=None, help="Search by title")

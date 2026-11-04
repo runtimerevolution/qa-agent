@@ -12,22 +12,27 @@ def run_command(command):
     """Runs a CLI command."""
     subprocess.run([sys.executable, "-m", "agent.cli"] + command, cwd=BASE_DIR)
 
-def get_test_cases():
-    """Returns the list of test cases from the CLI, or an empty list if it fails."""
+def get_command_json(command):
+    """Runs a CLI command that returns JSON. Returns the result, or None if it fails."""
     result = subprocess.run(
-        [sys.executable, "-m", "agent.cli", "list-tests", "--json"],
+        [sys.executable, "-m", "agent.cli"] + command,
         capture_output=True,
         text=True,
         cwd=BASE_DIR
     )
 
     if result.returncode != 0:
-        return []
+        return None
 
     try:
         return json.loads(result.stdout)
     except json.JSONDecodeError:
-        return []
+        return None
+
+
+def get_test_cases():
+    """Returns the list of test cases from the CLI, or an empty list if it fails."""
+    return get_command_json(["list-tests", "--json"]) or []
 
 def wait_for_menu():
     """Waits for the user to press Enter before returning to the menu."""
@@ -70,6 +75,7 @@ def test_cases_menu():
                 "👤 Assign Test Case",
                 "🎭 Run Playwright Test",
                 "🧪 Run Multiple Tests",
+                "📦 Test Suites",
                 "🗑️  Delete Test Case",
                 "📊 Stats",
                 "📤 Export Test Cases History",
@@ -233,7 +239,8 @@ def test_cases_menu():
             run_command(command)
             wait_for_menu()
 
-
+        elif choice == "📦 Test Suites":
+            suites_menu()
             
         elif choice == "🗑️  Delete Test Case":
             test_id = questionary.text("Test Case ID (e.g. TC-001):").ask()
@@ -250,6 +257,125 @@ def test_cases_menu():
 
         elif choice == "⬅️  Back":
             break
+
+def suites_menu():
+    """Submenu for test suites."""
+    while True:
+        clear_screen()
+        print("\n📦 Test Suites\n")
+
+        choice = questionary.select(
+            "What would you like to do?",
+            choices=[
+                "▶️  Run a Suite",
+                "👁️  View Suites",
+                "➕ Create or Edit a Suite",
+                "🗑️  Delete a Suite",
+                "⬅️  Back"
+            ]
+        ).ask()
+
+        if choice == "👁️  View Suites":
+            run_command(["suites"])
+            wait_for_menu()
+
+        elif choice in ("▶️  Run a Suite", "🗑️  Delete a Suite"):
+            suites = get_command_json(["suites", "--json"])
+
+            if suites is None:
+                print("\n❌ Could not load the suites. Run 'suites' in the terminal to see the error.\n")
+                wait_for_menu()
+                continue
+
+            if not suites:
+                print("\n📦 No suites saved yet. Create one first.\n")
+                wait_for_menu()
+                continue
+
+            name = questionary.select(
+                "Select a suite:",
+                choices=[
+                    questionary.Choice(
+                        title=f"{suite_name} ({len(suite.get('test_ids', []))} tests) — {suite.get('description', '')}",
+                        value=suite_name
+                    )
+                    for suite_name, suite in suites.items()
+                ] + [questionary.Choice(title="⬅️  Back", value=None)]
+            ).ask()
+
+            if not name:
+                continue
+
+            if choice == "▶️  Run a Suite":
+                mode = questionary.select(
+                    "Run mode:",
+                    choices=[
+                        "🌐 Real (requires Playwright installed)",
+                        "🎭 Simulate (demo mode)"
+                    ]
+                ).ask()
+
+                if mode is None:
+                    continue
+
+                command = ["run-suite", name]
+                if mode == "🎭 Simulate (demo mode)":
+                    command.append("--simulate")
+                run_command(command)
+            else:
+                run_command(["suite-delete", name])
+
+            wait_for_menu()
+
+        elif choice == "➕ Create or Edit a Suite":
+            name = questionary.text("Suite name (an existing name edits that suite):").ask()
+            if not name:
+                continue
+
+            suites = get_command_json(["suites", "--json"]) or {}
+            # Same name rules as the CLI (suite-save): no extra spaces, lowercase, spaces become dashes.
+            key = name.strip().lower().replace(" ", "-")
+            current = suites.get(key, {})
+            current_ids = current.get("test_ids", [])
+
+            description = questionary.text(
+                "Description (optional):",
+                default=current.get("description", "")
+            ).ask()
+            if description is None:
+                continue
+
+            test_cases = get_test_cases()
+            if not test_cases:
+                print("\n❌ Could not load the test cases.\n")
+                wait_for_menu()
+                continue
+
+            selected = questionary.checkbox(
+                "Select the tests for this suite (Space to select, Enter to confirm):",
+                choices=[
+                    questionary.Choice(
+                        title=f"{tc['id']} | {tc['title']}",
+                        value=tc["id"],
+                        checked=tc["id"] in current_ids
+                    )
+                    for tc in test_cases
+                ]
+            ).ask()
+
+            if not selected:
+                continue
+
+            command = ["suite-save", name, "--description", description]
+            for test_id in selected:
+                command += ["--id", test_id]
+
+            run_command(command)
+            wait_for_menu()
+
+        else:
+            break
+
 
 def history_menu():
     """Submenu for History."""
