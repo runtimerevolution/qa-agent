@@ -615,6 +615,31 @@ def suites():
         click.echo(f"  {name} ({count} tests) — {description}")
     click.echo("")
 
+
+@cli.command()
+@click.argument("name")
+@click.option("--simulate", is_flag=True, default=False, help="Simulate test runs without browser")
+@click.pass_context
+def run_suite(ctx, name, simulate):
+    """Run all the tests in a saved suite. Ex: run-suite smoke"""
+    name = name.lower()
+    saved = load_suites()
+
+    if name not in saved:
+        available = ", ".join(saved) if saved else "none yet"
+        click.echo(f"\n❌ Suite '{name}' not found. Available suites: {available}\n")
+        return
+
+    suite = saved[name]
+    test_ids = suite.get("test_ids", [])
+
+    if not test_ids:
+        click.echo(f"\n❌ Suite '{name}' has no tests.\n")
+        return
+
+    click.echo(f"\n📦 Suite: {name} — {suite.get('description', '')}")
+    ctx.invoke(run_tests, ids=tuple(test_ids), simulate=simulate)
+
 # Command: search pull requests
 @cli.command()
 @click.option("--title", "-t", default=None, help="Search by title")
