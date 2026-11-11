@@ -146,7 +146,7 @@ Navigate with the **arrow keys** and press **Enter** to select an option.
 
 | Menu | Options |
 |------|---------|
-| 📋 **Test Cases** | View, search, create, generate with AI, update, assign, run one Playwright test, run multiple tests, delete, stats, export history |
+| | 📋 **Test Cases** | View, search, create, generate with AI, update, assign, run one Playwright test, run multiple tests, test suites, delete, stats, export history |
 | 🗺️ **Roadmap** | View, add item, move item, mark as completed, remove item |
 | 📜 **History** | View history, export history |
 | 🤖 **Ask AI** | Ask a question, ask again (ignoring saved answers), clear saved answers |
@@ -237,6 +237,30 @@ Every change to a test case is recorded automatically.
 Add `--simulate` to any of them to simulate the run without opening a browser (demo mode).
 
 A test case needs a `playwright_file` linked to it to be run. You can add one with `update-test`.
+
+### 📦 Test Suites
+
+A suite is a named group of tests that you define once and run whenever you need, for example the most important tests to run before every release.
+
+| Command | What it does |
+|---------|--------------|
+| `suites` | Lists the saved suites |
+| `run-suite smoke` | Runs all the tests in a suite. Add `--simulate` for demo mode |
+| `suite-save smoke --id TC-001 --id TC-002 -d "Description"` | Creates a suite, or replaces it if it already exists |
+| `suite-delete smoke` | Deletes a suite (the test cases themselves are not deleted) |
+
+Suites are shared with the whole team through Git, so everyone runs the same tests.
+
+In the menu: **📋 Test Cases → 📦 Test Suites**. To edit a suite, choose **➕ Create or Edit a Suite** and type its name: its tests appear already selected.
+
+**Technical notes**
+
+- Suites are stored in `knowledge_base/suites/suites.json`, which is tracked by Git.
+- Suite names are saved in lowercase, with spaces replaced by dashes (`My Suite` → `my-suite`).
+- `suite-save` refuses test case IDs that do not exist, so broken suites are not saved.
+- `run-suite` reads the suite and calls `run-tests --id ...`, so it gets the same list, confirmation, skipped tests and summary.
+- If `suites.json` has a formatting error, the commands stop with an error instead of ignoring it, so existing suites are never overwritten by mistake.
+- `suites --json` returns the suites as JSON, used by the menu.
 
 **Running multiple tests**
 
@@ -430,7 +454,9 @@ qa-agent/
 │   ├── roadmap/
 │   │   └── roadmap.md             ← team roadmap
 │   ├── guidelines/
-│   │   └── guidelines.md          ← QA best practices
+│   │   └── guidelines.md 
+  ├── suites/
+│   │   └── suites.json            ← saved test suites (shared with the team)         ← QA best practices
 │   ├── history.json               ← change history (internal use)
 │   ├── history.md                 ← exported change history
 │   └── test_cases_history.md      ← exported test cases list
@@ -473,6 +499,9 @@ qa-agent/
 ---
 
 ## Changelog
+- **(2026-11-04)**
+  - Test suites: `suites`, `run-suite`, `suite-save` and `suite-delete`
+  - New **📦 Test Suites** submenu in **📋 Test Cases**
 - **2026-10-26**
   - `run-tests` can run specific test cases with `--id`
   - New **☑️ Choose from a list** option in **🧪 Run Multiple Tests**
