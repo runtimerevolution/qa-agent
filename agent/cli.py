@@ -53,12 +53,10 @@ def check_ai_enabled():
     return enabled
 
 
-def show_ai_thinking():
+def show_ai_thinking(message="🤔 Thinking..."):
     """Shows which AI provider and model are being used."""
-    if not check_ai_enabled():
-        return
     _, provider, model = get_ai_settings(load_config())
-    click.echo(f"\n🤔 Thinking... (using {provider} / {model})\n")
+    click.echo(f"\n{message} (using {provider} / {model})\n")
 
 def ask_ai(prompt):
     """Sends a prompt to the configured AI provider and returns the answer."""
@@ -993,6 +991,8 @@ def export_tests_history():
 @cli.command()
 def generate_test():
     """Generate a test case automatically using AI."""
+    if not check_ai_enabled():
+        return
     click.echo("\n🤖 AI Test Case Generator")
     click.echo("   💡 Type 'cancel' at any point to abort.\n")
 
@@ -1032,9 +1032,7 @@ Respond ONLY in this exact JSON format, nothing else:
 Generate between 3 and 5 steps. Be specific and technical.
 """
 
-    config = load_config()
-    click.echo(f"\n⏳ Generating test case... (using {config['ai_provider']} / {config['ai_model']})\n")
-
+    show_ai_thinking("⏳ Generating test case...")
     try:
         raw = ask_ai(prompt)
     except NotImplementedError as e:
