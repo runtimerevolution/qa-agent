@@ -439,10 +439,11 @@ If the AI is turned off in `config.json`, the AI check shows ✅, since this is 
 
 ## Project Structure
 
-```
 qa-agent/
 ├── .github/
-│   └── pull_request_template.md   ← template used for every PR
+│   ├── pull_request_template.md   ← template used for every PR
+│   └── workflows/
+│       └── tests.yml              ← runs the tests on every PR
 ├── agent/
 │   ├── cli.py                     ← all commands
 │   ├── menu.py                    ← interactive menu
@@ -454,18 +455,23 @@ qa-agent/
 │   ├── roadmap/
 │   │   └── roadmap.md             ← team roadmap
 │   ├── guidelines/
-│   │   └── guidelines.md 
-  ├── suites/
-│   │   └── suites.json            ← saved test suites (shared with the team)         ← QA best practices
+│   │   └── guidelines.md          ← QA best practices
+│   ├── suites/
+│   │   └── suites.json            ← saved test suites (shared with the team)
 │   ├── history.json               ← change history (internal use)
 │   ├── history.md                 ← exported change history
 │   └── test_cases_history.md      ← exported test cases list
-├── tests/                         ← Playwright test files
+├── qa_agent_tests/                ← automated tests of the QA Agent itself
+│   ├── conftest.py                ← shared setup (temporary Knowledge Base)
+│   ├── test_filters.py            ← tests for the test case filters
+│   ├── test_commands.py           ← tests for the CLI commands
+│   └── test_smoke.py              ← checks that the CLI, every command and the menu start
+├── tests/                         ← Playwright test files of the project being tested
 ├── config.example.json            ← configuration template
 ├── config.json                    ← your configuration (personal, not in Git)
+├── pytest.ini                     ← pytest settings
 ├── .ai_cache.json                 ← your saved AI answers (personal, not in Git)
 └── venv/                          ← virtual environment (personal, not in Git)
-```
 
 ### Technical notes
 
@@ -485,9 +491,34 @@ qa-agent/
 - **Nothing hardcoded.** Anything that changes between projects goes in `config.json` (and in `config.example.json` as a template).
 - **Code and documentation in English.**
 - **Fill in the PR template**, including how to test the change.
-- **Run `doctor`** and test your change on the menu before opening the PR.
+- **Run the tests** with `python -m pytest` before opening the PR, and test your change on the menu.
 
 ---
+
+## Tests
+
+### What they do
+
+The QA Agent has automated tests that check the tool itself: that the filters find the right test cases, that commands change the files correctly, and that every command and the menu start without errors.
+
+They run automatically on every Pull Request, on Linux, Windows and macOS. The PR shows ✅ if they pass, or ❌ with the details if something is broken.
+
+To run them on your computer:
+
+```bash
+python -m pytest
+```
+
+Add `-v` to see the name of each test.
+
+### Technical notes
+
+- The tests live in `qa_agent_tests/`, separate from `tests/`, which holds the Playwright tests of the project being tested. `pytest.ini` makes `pytest` look only in `qa_agent_tests/`.
+- `test_filters.py` tests `filter_test_cases()` with sample data.
+- `test_commands.py` runs the commands with Click's `CliRunner`. The `kb` fixture in `conftest.py` creates a temporary Knowledge Base for each test, so the real files are never changed.
+- `test_smoke.py` runs the CLI as a separate program, the same way the menu does, and checks that every command shows its help. New commands are tested automatically.
+- When fixing a bug, add a test that reproduces it, so it cannot come back.
+- The GitHub Actions workflow is in `.github/workflows/tests.yml`. It runs on Linux, Windows and macOS, with Python 3.10 (the minimum supported version) and 3.14.
 
 ## Important Notes
 
@@ -499,6 +530,9 @@ qa-agent/
 ---
 
 ## Changelog
+- **(2026-11-11)**
+  - Automated tests for the QA Agent, with pytest
+  - Tests run automatically on every PR, on Linux, Windows and macOS
 - **(2026-11-04)**
   - Test suites: `suites`, `run-suite`, `suite-save` and `suite-delete`
   - New **📦 Test Suites** submenu in **📋 Test Cases**
