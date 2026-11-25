@@ -30,6 +30,62 @@ def cell(row, columns, key):
     """Returns the value of one column in a row, without extra spaces."""
     return (row.get(columns[key]) or "").strip()
 
+def next_test_id(existing_ids):
+    """Returns the next free I in the TC-001 format."""
+    numbers = [
+        int(test_id[3:]) for test_id in existing_ids
+        if test_id.upper().startswith("TC-") and test_id[3:].isdigit()
+    ]
+    return f"TC-{max(numbers, default=0) + 1:03d}"
+
+def plan_import(parsed, existing_test_cases, valid_states):
+    """Decides what to do with each test case read from the file.
+    Returns (to_add, skipped, invalid)."""
+    states = {state.lower(): state for state in valid_states}
+    taken = {tc["id"].upper() for tc in existing_test_cases}
+    used_ids = [tc["id"] for tc in existing_test_cases]
+
+    to_add, skipped, invalid, needs_id = [], [], [], []
+
+    for tc in parsed:
+        label = f"Line {tc['line']} | {tc['title']}"
+
+        if not tc["steps"]:
+            invalid.append(f"{label}: no steps")
+            continue
+
+        state = states.get(tc["state"].lower())
+        if state is None:
+            invalid.append(f"{label}: invalid state '{tc['state']}'")
+            continue
+
+        record = {
+            "id": tc["id"],
+            "work_item_type": "Test Case",
+            "title": tc["title"],
+            "area_path": tc["area_path"],
+            "assigned_to": tc["assigned_to"],
+            "state": state,
+            "playwright_file": "",
+            "steps": tc["steps"],
+        }
+
+        if tc["id"]:
+            if tc["id"].upper() in taken:
+                skipped.append(f"{tc['id']} | {tc['title']}: already exists")
+                continue
+            taken.add(tc["id"].upper())
+            used_ids.append(tc["id"])
+        else:
+            needs_id.append(record)
+
+        to_add.append(record)
+
+    for record in needs_id:
+        record["id"] = next_test_id(used_ids)
+        used_ids.append(record["id"])
+
+    return to_add, skipped, invalid
 
 def parse_csv(path, columns):
     """Reads a CSV file and returns (test_cases, problems)."""

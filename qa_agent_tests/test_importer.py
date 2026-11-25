@@ -106,3 +106,54 @@ def test_custom_column_names(tmp_path):
     assert problems == []
     assert test_cases[0]["title"] == "Login"
     assert test_cases[0]["steps"][0]["action"] == "Abrir a página"
+
+    from agent.importer import next_test_id, plan_import
+
+VALID_STATES = ["Active", "Passed", "Failed", "Blocked", "In Progress"]
+
+
+def make_parsed(test_id="", title="New test", state="Active", steps=1, line=2):
+    """Creates a test case as returned by parse_csv, for the tests below."""
+    return {
+        "id": test_id, "title": title, "area_path": "App", "assigned_to": "Diogo",
+        "state": state, "line": line,
+        "steps": [{"step": n, "action": f"Action {n}", "expected": ""} for n in range(1, steps + 1)],
+    }
+
+
+def test_next_test_id_follows_the_highest_number():
+    assert next_test_id(["TC-001", "TC-007", "ABC", "TC-XYZ"]) == "TC-008"
+
+
+def test_next_test_id_starts_at_one():
+    assert next_test_id([]) == "TC-001"
+
+
+def test_plan_import_skips_existing_ids_ignoring_case():
+    existing = [{"id": "TC-001"}]
+    to_add, skipped, _ = plan_import([make_parsed("tc-001")], existing, VALID_STATES)
+
+    assert to_add == []
+    assert "already exists" in skipped[0]
+
+
+def test_plan_import_gives_ids_after_reading_the_whole_file():
+    parsed = [make_parsed(""), make_parsed("TC-002")]
+    to_add, _, _ = plan_import(parsed, [{"id": "TC-001"}], VALID_STATES)
+
+    assert [tc["id"] for tc in to_add] == ["TC-003", "TC-002"]
+
+
+def test_plan_import_fixes_the_state_case():
+    to_add, _, _ = plan_import([make_parsed("TC-005", state="passed")], [], VALID_STATES)
+
+    assert to_add[0]["state"] == "Passed"
+
+
+def test_plan_import_reports_invalid_states_and_missing_steps():
+    parsed = [make_parsed("TC-005", state="Done"), make_parsed("TC-006", steps=0, line=9)]
+    to_add, _, invalid = plan_import(parsed, [], VALID_STATES)
+
+    assert to_add == []
+    assert "invalid state 'Done'" in invalid[0]
+    assert "Line 9" in invalid[1]

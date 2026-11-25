@@ -10,5 +10,14 @@
   "ollama": "llama3.2",
   "claude": "claude-sonnet-5",
   "openai": ""
-}
+},
+  "import_columns": {
+    "id": "ID",
+    "title": "Title",
+    "area": "Area Path",
+    "assigned_to": "Assigned To",
+    "state": "State",
+    "step_action": "Step Action",
+    "step_expected": "Step Expected"
+  }
 }
