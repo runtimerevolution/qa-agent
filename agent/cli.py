@@ -3,13 +3,14 @@ import json
 import os
 from agent.doctor import run_doctor, ICONS, ERROR, WARNING
 from agent.ai_cache import make_key, get_cached_answer, save_answer, clear_cache
+from agent.importer import DEFAULT_COLUMNS, next_test_id, parse_csv, plan_import
 
 # Path to knowledge base
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TEST_CASES_PATH = os.path.join(BASE_DIR, "knowledge_base", "test_cases", "test_cases.json")
 HISTORY_PATH = os.path.join(BASE_DIR, "knowledge_base", "history.json")
 SUITES_PATH = os.path.join(BASE_DIR, "knowledge_base", "suites", "suites.json")
-
+VALID_STATES = ["Active", "Passed", "Failed", "Blocked", "In Progress"]
 CONFIG_PATH = os.path.join(BASE_DIR, "config.json")
 CACHE_PATH = os.path.join(os.path.dirname(CONFIG_PATH), ".ai_cache.json")
 
@@ -41,6 +42,10 @@ def get_ai_settings(config):
     model = models.get(provider) or config.get("ai_model", "")
 
     return enabled, provider, model
+
+def get_import_columns(config):
+    """Returns the CSV column names to import, with any changes from config.json."""
+    return {**DEFAULT_COLUMNS, **config.get("import_columns", {})}
 
 def check_ai_enabled():
     """Returns True if the AI is turned on. If not, explains how to turn it on."""
@@ -215,8 +220,8 @@ def list_tests(as_json):
             }
             for tc in data["test_cases"]
         ]
-    click.echo(json.dumps(summary))
-    return
+        click.echo(json.dumps(summary))
+        return
 
     click.echo("\n📋 Available test cases:\n")
     for tc in data["test_cases"]:
@@ -253,10 +258,8 @@ def show(test_id):
 @click.argument("new_state")
 def update_state(test_id, new_state):
     """Update the state of a test case. Ex: python agent/cli.py update-state TC-001 Passed"""
-    valid_states = ["Active", "Passed", "Failed", "Blocked", "In Progress"]
-
-    if new_state not in valid_states:
-        click.echo(f"\n❌ Invalid state. Available states: {', '.join(valid_states)}\n")
+    if new_state not in VALID_STATES:
+        click.echo(f"\n❌ Invalid state. Available states: {', '.join(VALID_STATES)}\n")
         return
 
     with open(TEST_CASES_PATH, "r", encoding="utf-8") as f:
@@ -267,16 +270,6 @@ def update_state(test_id, new_state):
     if test is None:
         click.echo(f"\n❌ Test case '{test_id}' not found.\n")
         return
-
-    old_state = test["state"]
-    test["state"] = new_state
-
-    with open(TEST_CASES_PATH, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=2, ensure_ascii=False)
-
-    log_event("state_change", test_id, f"{old_state} → {new_state}")
-
-    click.echo(f"\n✅ TC '{test_id}' updated: {old_state} → {new_state}\n")
 
 # Command: add a new test case
 @cli.command()
@@ -349,6 +342,63 @@ def add_test():
     log_event("test_created", test_id, f"Test case '{title}' created")
 
     click.echo(f"\n✅ Test case '{test_id}' successfully added!\n")
+
+@cli.command()
+@click.argument("file", type=click.Path(exists=True, dir_okay=False))
+def import_tests(file):
+    """Import test cases from a CSV file (one row per step). Ex: import-tests test_cases.csv"""
+    columns = get_import_columns(load_config())
+    file_name = os.path.basename(file)
+
+    try:
+        parsed, problems = parse_csv(file, columns)
+    except UnicodeDecodeError:
+        click.echo("\n❌ Could not read the file. In Excel, save it as 'CSV UTF-8' and try again.\n")
+        return
+
+    with open(TEST_CASES_PATH, "r", encoding="utf-8") as f:
+        data = json.load(f)
+
+    to_add, skipped, invalid = plan_import(parsed, data["test_cases"], VALID_STATES)
+    invalid = problems + invalid
+
+    click.echo(f"\n📥 Import preview: {file_name}\n")
+    click.echo(f"  ✅ To import:      {len(to_add)}")
+    click.echo(f"  ⏭️  Already exist:  {len(skipped)}")
+    click.echo(f"  ❌ With problems:  {len(invalid)}")
+
+    if to_add:
+        click.echo("\n✅ To import:\n")
+        for tc in to_add:
+            click.echo(f"  {tc['id']} | {tc['title']} ({len(tc['steps'])} steps)")
+
+    if skipped:
+        click.echo("\n⏭️  Already exist (not changed):\n")
+        for message in skipped:
+            click.echo(f"  {message}")
+
+    if invalid:
+        click.echo("\n❌ With problems (not imported):\n")
+        for message in invalid:
+            click.echo(f"  {message}")
+
+    if not to_add:
+        click.echo("\nNothing to import.\n")
+        return
+
+    if not click.confirm(f"\n   Import {len(to_add)} test case(s)?", default=True):
+        click.echo("\n❌ Import cancelled.\n")
+        return
+
+    data["test_cases"].extend(to_add)
+
+    with open(TEST_CASES_PATH, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=2, ensure_ascii=False)
+
+    for tc in to_add:
+        log_event("test_created", tc["id"], f"Test case '{tc['title']}' imported from {file_name}")
+
+    click.echo(f"\n✅ {len(to_add)} test case(s) imported!\n")
 
 # Command: update an existing test case
 @cli.command()
@@ -1069,9 +1119,7 @@ Generate between 3 and 5 steps. Be specific and technical.
         data = json.load(f)
 
     existing_ids = [tc["id"] for tc in data["test_cases"]]
-    numbers = [int(id.replace("TC-", "")) for id in existing_ids if id.startswith("TC-")]
-    next_id = f"TC-{str(max(numbers) + 1).zfill(3)}" if numbers else "TC-001"
-
+    next_id = next_test_id([tc["id"] for tc in data["test_cases"]])
     new_test = {
         "id": next_id,
         "work_item_type": "Test Case",

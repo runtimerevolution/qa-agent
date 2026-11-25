@@ -70,6 +70,7 @@ def test_cases_menu():
                 "👁️  View Test Cases",
                 "🔍 Search Test Cases",
                 "➕ Create Test Case",
+                "📥 Import Test Cases",
                 "🤖 Generate Test Case with AI",
                 "✏️  Update Test Case",
                 "👤 Assign Test Case",
@@ -121,6 +122,18 @@ def test_cases_menu():
 
         elif choice == "➕ Create Test Case":
             run_command(["add-test"])
+            wait_for_menu()
+        
+        elif choice == "📥 Import Test Cases":
+            print("\n💡 In Excel, use 'Save As' → 'CSV UTF-8'.")
+            print("💡 You can drag the file into this window to write its path.\n")
+
+            path = questionary.path("CSV file to import:").ask()
+            if not path:
+                continue
+
+            path = path.strip().strip("'\"").replace("\\ ", " ")
+            run_command(["import-tests", os.path.abspath(path)])
             wait_for_menu()
         
         elif "Generate Test Case with AI" in choice:
