@@ -112,6 +112,7 @@ The file `config.example.json` is the template: copy it to create your own.
 | `ai_cache_enabled` | Saves AI answers to reuse them (see [Saved answers](#saved-answers-cache)) | `true` |
 | `ai_provider` | Which AI provider to use | `"ollama"` |
 | `ai_models` | The model to use for each provider | see below |
+| `import_columns` | Column names used by `import-tests` (only the ones you change are needed) | see below |
 
 Example of the AI section:
 ```json
@@ -124,7 +125,20 @@ Example of the AI section:
   "openai": ""
 }
 ```
+Example of the import section, with the default column names (the same as the Azure DevOps export):
+```json
+"import_columns": {
+  "id": "ID",
+  "title": "Title",
+  "area": "Area Path",
+  "assigned_to": "Assigned To",
+  "state": "State",
+  "step_action": "Step Action",
+  "step_expected": "Step Expected"
+}
+```
 
+If only one column is different, you only need to write that one. For example, `"import_columns": {"title": "Test name"}`.
 ### Technical notes
 
 - `config.json` is listed in `.gitignore` and is not tracked by Git.
@@ -146,7 +160,7 @@ Navigate with the **arrow keys** and press **Enter** to select an option.
 
 | Menu | Options |
 |------|---------|
-| | 📋 **Test Cases** | View, search, create, generate with AI, update, assign, run one Playwright test, run multiple tests, test suites, delete, stats, export history |
+| 📋 **Test Cases** | View, search, create, import from CSV, generate with AI, update, assign, run one Playwright test, run multiple tests, test suites, delete, stats, export history |
 | 🗺️ **Roadmap** | View, add item, move item, mark as completed, remove item |
 | 📜 **History** | View history, export history |
 | 🤖 **Ask AI** | Ask a question, ask again (ignoring saved answers), clear saved answers |
@@ -194,6 +208,7 @@ python -m agent.cli --help
 | `search` | Searches test cases (see options below) |
 | `stats` | Shows statistics by state |
 | `export-tests-history` | Exports the test cases list to `knowledge_base/test_cases_history.md` |
+| `import-tests file.csv` | Imports test cases from a CSV file (see below) |
 
 Available states: `Active` `Passed` `Failed` `Blocked` `In Progress`
 
@@ -205,6 +220,39 @@ python -m agent.cli search --area Project/Login
 python -m agent.cli search --state Failed
 python -m agent.cli run-tests --id TC-001 --id TC-003  # run specific test cases
 ```
+#### Importing test cases from a spreadsheet
+
+If your test cases are in Excel, Google Sheets or Azure DevOps, you can import them instead of writing them again.
+
+1. Export the spreadsheet as **CSV UTF-8**. In Excel: **File → Save As → CSV UTF-8**.
+2. Run the import:
+   ```bash
+   python -m agent.cli import-tests test_cases.csv
+   ```
+   Or in the menu: **📋 Test Cases → 📥 Import Test Cases**.
+3. Check the preview and confirm.
+
+The file needs **one row per step**, like the Azure DevOps export. The first row of each test case has its title; the next rows, without a title, are more steps of the same test case:
+
+| ID | Title | Step Action | Step Expected | Area Path | Assigned To | State |
+|----|-------|-------------|---------------|-----------|-------------|-------|
+| TC-101 | Login | Open the login page | Login page is shown | App/Login | Diogo | Active |
+| | | Enter valid credentials | User is logged in | | | |
+
+Before importing, the preview shows:
+- ✅ **To import:** new test cases. Rows without an ID get the next free one.
+- ⏭️ **Already exist:** test cases whose ID is already in the QA Agent. They are **never** changed.
+- ❌ **With problems:** rows without steps or with an invalid state, with the reason. They are not imported.
+
+If your columns have different names, set them in `config.json` (see [Configuration](#configuration)).
+
+**Technical notes**
+
+- The import lives in `agent/importer.py`: `parse_csv()` reads the file and `plan_import()` decides what to import. Neither changes any file, so both are easy to test.
+- The column separator (`,` or `;`) is detected automatically, so files from Excel in Portuguese work too.
+- The file is read as `utf-8-sig`, which ignores the invisible mark (BOM) that Excel adds to CSV UTF-8 files.
+- New IDs are given only after the whole file is read, so a row without ID never takes an ID used further down in the same file.
+- Each imported test case is recorded in the history, with the name of the file it came from.
 
 ### 🗺️ Roadmap
 
@@ -448,7 +496,8 @@ qa-agent/
 │   ├── cli.py                     ← all commands
 │   ├── menu.py                    ← interactive menu
 │   ├── doctor.py                  ← installation checks
-│   └── ai_cache.py                ← saved AI answers
+│   ├── ai_cache.py                ← saved AI answers
+│   └── importer.py                ← reads test cases from CSV files
 ├── knowledge_base/
 │   ├── test_cases/
 │   │   └── test_cases.json        ← test cases database
@@ -465,6 +514,7 @@ qa-agent/
 │   ├── conftest.py                ← shared setup (temporary Knowledge Base)
 │   ├── test_filters.py            ← tests for the test case filters
 │   ├── test_commands.py           ← tests for the CLI commands
+│   ├── test_importer.py           ← tests for the CSV import
 │   └── test_smoke.py              ← checks that the CLI, every command and the menu start
 ├── tests/                         ← Playwright test files of the project being tested
 ├── config.example.json            ← configuration template
@@ -530,6 +580,9 @@ Add `-v` to see the name of each test.
 ---
 
 ## Changelog
+- **(2026-11-25)**
+  - Import test cases from CSV files: `import-tests`, and **📥 Import Test Cases** in the menu
+  - Fixed: `list-tests` crashed when run without `--json`
 - **(2026-11-11)**
   - Automated tests for the QA Agent, with pytest
   - Tests run automatically on every PR, on Linux, Windows and macOS
